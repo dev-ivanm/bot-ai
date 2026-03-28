@@ -41,6 +41,21 @@ services:
       - ./evolution_instances:/evolution/instances
     restart: always
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: evolution_backend
+    networks:
+      - evolution_net
+    ports:
+      - "3000:3000"
+    depends_on:
+      - evolution_api
+    env_file:
+      - ./backend/.env
+    restart: always
+
 networks:
   evolution_net:
     driver: bridge
