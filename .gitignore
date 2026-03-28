@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases and Local Data
+postgres_data/
+evolution_instances/
+supabase/.temp/
+
+# Build and IDE
+.next/
+out/
+build/
+dist/
+.DS_Store
+.vscode/
+.idea/
+*.log

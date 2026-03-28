@@ -1,0 +1,46 @@
+services:
+  evolution_api:
+    image: evoapicloud/evolution-api:latest
+    container_name: evolution_api_official
+    networks:
+      - evolution_net
+    ports:
+      - "8080:8080"
+    environment:
+      # GENERAL
+      SERVER_URL: "http://localhost:8080"
+      API_KEY: "42244224"
+
+      # BASE DE DATOS (Supabase por variable de entorno externa o reemplazada aqui manualmente)
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "postgresql"
+      DATABASE_CONNECTION_URI: "${SUPABASE_DB_URL:-postgres://postgres:password@db.supabase.co:5432/postgres}"
+      DATABASE_CONNECTION_CLIENT_NAME: "evolution_db"
+
+      # AUTENTICACIÓN
+      AUTHENTICATION_TYPE: "apikey"
+      AUTHENTICATION_API_KEY: "42244224"
+
+      # PERSISTENCIA
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      DATABASE_SAVE_DATA_LABELS: "true"
+      DATABASE_SAVE_MESSAGE_FILES: "true"
+      
+      # SINCRONIZACIÓN
+      QRCODE_LIMIT: "30"
+      CLEAN_STORE_CLEAN_CHAT: "false"
+      CLEAN_STORE_CLEAN_CONTACT: "false"
+
+      # CACHE
+      CACHE_REDIS_ENABLED: "false"
+      CACHE_LOCAL_ENABLED: "true"
+    volumes:
+      - ./evolution_instances:/evolution/instances
+    restart: always
+
+networks:
+  evolution_net:
+    driver: bridge

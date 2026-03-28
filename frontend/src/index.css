@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-whatsapp-dark: #0b141a;
+  --color-whatsapp-teal: #00a884;
+  --color-whatsapp-panel: #202c33;
+  --color-whatsapp-input: #2a3942;
+}
+
+html, body, #root {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #0b141a;
+}
+
+/* Scrollbar personalizada - Máxima visibilidad */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #111b21;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #374045;
+  border-radius: 5px;
+  border: 2px solid #111b21;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #00a884;
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: #374045 #111b21;
+}
