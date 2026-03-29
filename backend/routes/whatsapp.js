@@ -512,7 +512,7 @@ router.get('/usage', async (req, res) => {
         res.json({
             agentes: agentesCount.count || 1,
             documentos: 0,
-            memoria: totalMemoria.length
+            memoria: allMemRes.data?.length || 0
         });
     } catch (err) {
         console.error('[Usage] Error calculando uso:', err);
@@ -1360,11 +1360,9 @@ router.get('/upgrade/my-request', async (req, res) => {
 
 const nodemailer = require('nodemailer');
 
-// Transporter para nodemailer (Configurado en .env)
+// Transporter para nodemailer (Optimizado para Gmail)
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
+    service: 'gmail',
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
