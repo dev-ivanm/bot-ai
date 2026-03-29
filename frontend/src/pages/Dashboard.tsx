@@ -674,7 +674,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="h-full bg-[#0b141a] text-[#e9edef] flex flex-col overflow-hidden">
-        <header className="flex-shrink-0 p-4 bg-[#202c33] flex justify-between items-center border-b border-[#2a3942]">
+        <header className="hidden lg:flex flex-shrink-0 p-4 bg-[#202c33] flex justify-between items-center border-b border-[#2a3942]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center font-bold text-[#111b21]">
               {session?.user.email?.charAt(0).toUpperCase()}
@@ -701,36 +701,57 @@ const Dashboard = () => {
           <section className={`w-full lg:w-[300px] flex-shrink-0 border-r border-[#2a3942] flex flex-col bg-[#111b21] min-h-0 ${
             showMobileChat ? "hidden lg:flex" : "flex"
           }`}>
-            <div className="p-4 flex justify-between items-center bg-[#202c33]">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase text-[#8696a0]">
-                  Chats
-                </span>
-                {loading && <RefreshCw className="animate-spin text-[#00a884]" size={14} />}
+            <div className="p-4 flex flex-col gap-3 bg-[#202c33] border-b border-[#2a3942]">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase text-[#8696a0]">
+                    Chats
+                  </span>
+                  {loading && <RefreshCw className="animate-spin text-[#00a884]" size={14} />}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowPromptModal(true)}
+                    className="text-[#34b7f1] hover:text-[#2fa3d8] transition-colors"
+                    title="IA Prompt (Personalidad)"
+                  >
+                    <Bot size={18} />
+                  </button>
+                  <button
+                    onClick={() => setShowCerebroModal(true)}
+                    className="text-[#00a884] hover:text-[#058f72] transition-colors"
+                    title="Cerebro (Base de datos de IA)"
+                  >
+                    <BookOpen size={18} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      void cargarChats();
+                    }}
+                    className="text-[#8696a0] hover:text-white transition-colors"
+                    title="Actualizar chats"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+
+              {/* Status móvil únicamente */}
+              <div className="lg:hidden flex items-center justify-between bg-[#111b21] px-3 py-2 rounded-lg border border-[#2a3942]">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <QrCode
+                    size={14}
+                    className={qr ? "animate-pulse text-yellow-500" : "text-[#00a884]"}
+                  />
+                  <span className="text-[10px] font-bold text-[#e9edef] truncate uppercase tracking-widest">
+                    {status}
+                  </span>
+                </div>
                 <button
-                  onClick={() => setShowPromptModal(true)}
-                  className="text-[#34b7f1] hover:text-[#2fa3d8] transition-colors"
-                  title="IA Prompt (Personalidad)"
+                  onClick={() => supabase.auth.signOut()}
+                  className="text-[#ea4335] p-1"
                 >
-                  <Bot size={18} />
-                </button>
-                <button
-                  onClick={() => setShowCerebroModal(true)}
-                  className="text-[#00a884] hover:text-[#058f72] transition-colors"
-                  title="Cerebro (Base de datos de IA)"
-                >
-                  <BookOpen size={18} />
-                </button>
-                <button
-                  onClick={() => {
-                    void cargarChats();
-                  }}
-                  className="text-[#8696a0] hover:text-white transition-colors"
-                  title="Actualizar chats"
-                >
-                  <RefreshCw size={16} />
+                  <LogOut size={14} />
                 </button>
               </div>
             </div>

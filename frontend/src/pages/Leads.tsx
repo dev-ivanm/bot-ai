@@ -179,7 +179,7 @@ const Leads = () => {
 
   return (
     <Layout>
-      <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
+      <div className="p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-[#00a884]/10 p-3 rounded-2xl shrink-0">
