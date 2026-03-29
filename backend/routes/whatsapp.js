@@ -1358,15 +1358,29 @@ router.get('/upgrade/my-request', async (req, res) => {
 // PERFIL Y VERIFICACIÓN OTP
 // =============================================
 
-const { Resend } = require('resend');
-const resendClient = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
-// (Opcional: Verificación de API Key al inicio)
-if (!process.env.RESEND_API_KEY) {
-    console.warn('[Resend] Advertencia: RESEND_API_KEY no configurada. Los correos no se enviarán.');
-} else {
-    console.log('[Resend] Cliente configurado correctamente');
-}
+// Transporter para nodemailer (Configuración OAuth2 definitiva para Railway)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        type: 'OAuth2',
+        user: process.env.GMAIL_USER,
+        clientId: process.env.GMAIL_CLIENT_ID,
+        clientSecret: process.env.GMAIL_CLIENT_SECRET,
+        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+    },
+});
+
+// Verificación de conexión OAuth2
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('[GMAIL OAuth2] Error de autenticación:', error);
+    } else {
+        console.log('[GMAIL OAuth2] Servidor listo para enviar mensajes (Puerto 443 compatible)');
+    }
+});
 
 
 // POST /api/whatsapp/auth/register
@@ -1477,10 +1491,10 @@ router.post('/auth/forgot-password', async (req, res) => {
 
         const recoveryLink = data.properties.action_link;
 
-        // 2. Enviar email con Resend
-        const { data: emailData, error: emailError } = await resendClient.emails.send({
-            from: 'Bot AI <onboarding@resend.dev>',
-            to: [email],
+        // 2. Enviar email con Gmail OAuth2
+        const info = await transporter.sendMail({
+            from: `"Bot AI" <${process.env.GMAIL_USER}>`,
+            to: email,
             subject: 'Recupera tu contraseña - Bot AI',
             html: `
                 <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -1500,8 +1514,7 @@ router.post('/auth/forgot-password', async (req, res) => {
             `
         });
 
-        if (emailError) throw emailError;
-        console.log('[Forgot-Password] Email enviado con éxito via Resend:', emailData.id);
+        console.log('[Forgot-Password] Email enviado con éxito via Gmail OAuth2:', info.messageId);
         res.json({ success: true, message: 'Email de recuperación enviado' });
 
     } catch (err) {
@@ -1546,10 +1559,10 @@ router.post('/otp/send', async (req, res) => {
 
         console.log(`[OTP] Enviando código a ${user.email} (UserId: ${userId})`);
 
-        // Enviar email con Resend
-        const { data: emailData, error: emailError } = await resendClient.emails.send({
-            from: 'Bot AI <onboarding@resend.dev>',
-            to: [user.email],
+        // Enviar email con Gmail OAuth2
+        const info = await transporter.sendMail({
+            from: `"Bot AI" <${process.env.GMAIL_USER}>`,
+            to: user.email,
             subject: 'Tu código de verificación - Bot AI',
             html: `
                 <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -1567,8 +1580,7 @@ router.post('/otp/send', async (req, res) => {
             `
         });
 
-        if (emailError) throw emailError;
-        console.log('[OTP] Email enviado con éxito via Resend:', emailData.id);
+        console.log('[OTP] Email enviado con éxito via Gmail OAuth2:', info.messageId);
         res.json({ success: true, message: 'OTP enviado' });
     } catch (err) {
         console.error('[OTP] Error sending:', err);
