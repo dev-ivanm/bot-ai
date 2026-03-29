@@ -35,7 +35,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#111b21] px-4">
       <div className="max-w-md w-full bg-[#202c33] p-8 rounded-lg shadow-2xl border-t-4 border-[#00a884]">
-        <h2 className="text-2xl font-bold text-center text-[#e9edef] mb-8">
+        <h2 className="text-2xl font-bold text-center text-[#e9edef] mb-1">
           Acceso Bot WhatsApp AI
         </h2>
         <p className="text-center text-[#e9edef] mb-8">Una Plataforma de Inteligencia Comercial</p>
