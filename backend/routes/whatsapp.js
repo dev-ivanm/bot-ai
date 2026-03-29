@@ -1360,13 +1360,30 @@ router.get('/upgrade/my-request', async (req, res) => {
 
 const nodemailer = require('nodemailer');
 
-// Transporter para nodemailer (Optimizado para Gmail)
+// Transporter para nodemailer (Cambiando a puerto 465 con SSL para mayor compatibilidad)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // SSL implícito en puerto 465
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
+    tls: {
+        rejectUnauthorized: false
+    },
+    family: 4, 
+    logger: true,
+    debug: true
+});
+
+// Verificación de conexión inmediata al iniciar o recargar
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('[SMTP] Error de verificación inicial:', error);
+    } else {
+        console.log('[SMTP] Servidor listo para enviar mensajes (IPv4 Force)');
+    }
 });
 
 
