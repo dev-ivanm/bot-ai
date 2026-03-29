@@ -844,14 +844,20 @@ const Dashboard = () => {
                   {qr ? "Escanea el código" : "Selecciona un chat"}
                 </p>
                 {!qr && !status.includes("✅") && (
-                  <button
-                    onClick={() => {
-                      void manejarConexionTotal();
-                    }}
-                    className="mt-4 bg-[#00a884] text-[#111b21] px-6 py-2 rounded-full font-bold text-xs"
-                  >
-                    VINCULAR
-                  </button>
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    
+                    <button
+                      onClick={() => {
+                        void manejarConexionTotal();
+                      }}
+                      className="bg-[#00a884] text-[#111b21] px-8 py-3 rounded-full font-black text-xs uppercase hover:brightness-110 active:scale-95 transition-all shadow-xl"
+                    >
+                      GENERAR QR
+                    </button>
+                      <p className="text-[10px] text-[#8696a0] font-bold uppercase tracking-wider text-center max-w-[200px]">
+                        Presiona para generar QR de conexión con WhatsApp
+                      </p>
+                  </div>
                 )}
               </div>
             )}

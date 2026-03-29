@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-hot-toast";
 
@@ -7,6 +8,7 @@ import { toast } from "react-hot-toast";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const translateError = (msg: string) => {
@@ -51,7 +53,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#111b21] px-4">
       <div className="max-w-md w-full bg-[#202c33] p-8 rounded-lg shadow-2xl border-t-4 border-[#00a884]">
         <h2 className="text-2xl font-bold text-center text-[#e9edef] mb-1">
-          Acceso Bot WhatsApp AI
+          Login Bot WhatsApp AI
         </h2>
         <p className="text-center text-[#e9edef] mb-8">Una Plataforma de Inteligencia Comercial</p>
         <form onSubmit={handleLogin} className="space-y-4">
@@ -62,13 +64,22 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            className="w-full p-3 bg-[#2a3942] text-[#e9edef] border-none rounded focus:ring-2 focus:ring-[#00a884] outline-none"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              className="w-full p-3 bg-[#2a3942] text-[#e9edef] border-none rounded focus:ring-2 focus:ring-[#00a884] outline-none pr-12"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8696a0] hover:text-[#e9edef] transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
 
           <div className="text-right">
             <Link 
