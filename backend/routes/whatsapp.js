@@ -1361,26 +1361,53 @@ router.get('/upgrade/my-request', async (req, res) => {
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 
-// Transporter para nodemailer (Configuración OAuth2 definitiva para Railway)
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        type: 'OAuth2',
-        user: process.env.GMAIL_USER,
-        clientId: process.env.GMAIL_CLIENT_ID,
-        clientSecret: process.env.GMAIL_CLIENT_SECRET,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-    },
+// Configuración de la API de Gmail v1 (HTTPS - Sin bloqueos de puertos)
+const oauth2Client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground'
+);
+
+oauth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN
 });
 
-// Verificación de conexión OAuth2
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('[GMAIL OAuth2] Error de autenticación:', error);
-    } else {
-        console.log('[GMAIL OAuth2] Servidor listo para enviar mensajes (Puerto 443 compatible)');
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+// Función auxiliar para enviar correos vía Gmail API (HTTPS)
+async function sendGmail({ to, subject, html }) {
+    try {
+        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+        const messageParts = [
+            `From: "Bot AI" <${process.env.GMAIL_USER}>`,
+            `To: ${to}`,
+            'Content-Type: text/html; charset=utf-8',
+            'MIME-Version: 1.0',
+            `Subject: ${utf8Subject}`,
+            '',
+            html,
+        ];
+        const message = messageParts.join('\n');
+        const encodedMessage = Buffer.from(message)
+            .toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        const res = await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: encodedMessage,
+            },
+        });
+        return res.data;
+    } catch (error) {
+        console.error('[Gmail API] Error enviando correo:', error);
+        throw error;
     }
-});
+}
+
+console.log('[Gmail API] Cliente HTTPS configurado correctamente');
 
 
 // POST /api/whatsapp/auth/register
@@ -1491,9 +1518,8 @@ router.post('/auth/forgot-password', async (req, res) => {
 
         const recoveryLink = data.properties.action_link;
 
-        // 2. Enviar email con Gmail OAuth2
-        const info = await transporter.sendMail({
-            from: `"Bot AI" <${process.env.GMAIL_USER}>`,
+        // 2. Enviar email con Gmail API (HTTPS)
+        const emailResult = await sendGmail({
             to: email,
             subject: 'Recupera tu contraseña - Bot AI',
             html: `
@@ -1514,7 +1540,7 @@ router.post('/auth/forgot-password', async (req, res) => {
             `
         });
 
-        console.log('[Forgot-Password] Email enviado con éxito via Gmail OAuth2:', info.messageId);
+        console.log('[Forgot-Password] Email enviado con éxito via Gmail API (HTTPS):', emailResult.id);
         res.json({ success: true, message: 'Email de recuperación enviado' });
 
     } catch (err) {
@@ -1559,9 +1585,8 @@ router.post('/otp/send', async (req, res) => {
 
         console.log(`[OTP] Enviando código a ${user.email} (UserId: ${userId})`);
 
-        // Enviar email con Gmail OAuth2
-        const info = await transporter.sendMail({
-            from: `"Bot AI" <${process.env.GMAIL_USER}>`,
+        // Enviar email con Gmail API (HTTPS)
+        const emailResult = await sendGmail({
             to: user.email,
             subject: 'Tu código de verificación - Bot AI',
             html: `
@@ -1580,7 +1605,7 @@ router.post('/otp/send', async (req, res) => {
             `
         });
 
-        console.log('[OTP] Email enviado con éxito via Gmail OAuth2:', info.messageId);
+        console.log('[OTP] Email enviado con éxito via Gmail API (HTTPS):', emailResult.id);
         res.json({ success: true, message: 'OTP enviado' });
     } catch (err) {
         console.error('[OTP] Error sending:', err);
