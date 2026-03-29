@@ -670,17 +670,6 @@ const Dashboard = () => {
     };
   }, [session, perfil?.instance_name, API_URL, cargarChats, fetchMessages]);
 
-  if (loading)
-    return (
-    <Layout>
-      <div className="flex-1 flex min-w-0 h-full overflow-hidden">
-        {/* PANEL LATERAL: LISTA DE CHATS */}
-        <div className="h-screen bg-[#0b141a] flex items-center justify-center text-[#00a884]">
-          <RefreshCw className="animate-spin" />
-        </div>
-      </div>
-    </Layout>
-    );
 
   return (
     <Layout>
@@ -713,9 +702,12 @@ const Dashboard = () => {
             showMobileChat ? "hidden lg:flex" : "flex"
           }`}>
             <div className="p-4 flex justify-between items-center bg-[#202c33]">
-              <span className="text-xs font-bold uppercase text-[#8696a0]">
-                Chats
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase text-[#8696a0]">
+                  Chats
+                </span>
+                {loading && <RefreshCw className="animate-spin text-[#00a884]" size={14} />}
+              </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowPromptModal(true)}
