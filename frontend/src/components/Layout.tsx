@@ -36,7 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
         </header>
 
         {/* Contenedor principal para el contenido de la página */}
-        <div className="flex-1 min-h-0 relative overflow-hidden">
+        <div className="flex-1 min-h-0 relative flex flex-col overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </main>

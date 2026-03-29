@@ -8,11 +8,12 @@
 }
 
 html, body, #root {
-  height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
   background-color: #0b141a;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar personalizada - Máxima visibilidad */
