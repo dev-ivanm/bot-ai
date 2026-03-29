@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Users as UsersIcon, Trash2, Mail, Lock } from "lucide-react";
+import { toast } from "react-hot-toast";
+
 import { supabase } from "../lib/supabase";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/auth-context";
@@ -81,7 +84,7 @@ const Users = () => {
 
   const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001/api/whatsapp";
 
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     if (!currentUserProfile) return;
     
     setLoading(true);
@@ -100,13 +103,15 @@ const Users = () => {
       setProfiles(data || []);
     }
     setLoading(false);
-  };
+  }, [currentUserProfile]);
+
 
   useEffect(() => {
     if (currentUserProfile) {
       fetchProfiles();
     }
-  }, [currentUserProfile]);
+  }, [currentUserProfile, fetchProfiles]);
+
 
   const crearAgente = async () => {
     if (!nuevoAgenteEmail.trim() || !nuevoAgentePass.trim() || creandoAgente) return;
@@ -128,27 +133,29 @@ const Users = () => {
       });
 
       if (res.ok) {
-        alert("¡Agente creado exitosamente!");
+        toast.success("¡Agente creado exitosamente!");
         setNuevoAgenteEmail("");
         setNuevoAgentePass("");
         fetchProfiles();
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.error || 'No se pudo crear el agente'}`);
+        toast.error(`Error: ${errorData.error || 'No se pudo crear el agente'}`);
       }
     } catch (err) {
       console.error("Error creando agente:", err);
-      alert("Error de conexión al servidor");
+      toast.error("Error de conexión al servidor");
     } finally {
+
       setCreandoAgente(false);
     }
   };
 
   const borrarAgente = async (id: string, email: string) => {
     if (email === 'dev.ivanm@gmail.com') {
-      alert("No puedes eliminar al Super Admin principal.");
+      toast.error("No puedes eliminar al Super Admin principal.");
       return;
     }
+
 
     if (!confirm(`¿Estás seguro de que quieres eliminar al agente ${email}? Esta acción borrará permanentemente sus chats y configuración.`)) return;
 
@@ -162,28 +169,29 @@ const Users = () => {
       });
 
       if (res.ok) {
-        alert("Agente eliminado correctamente");
+        toast.success("Agente eliminado correctamente");
         fetchProfiles();
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.error || 'No se pudo eliminar el agente'}`);
+        toast.error(`Error: ${errorData.error || 'No se pudo eliminar el agente'}`);
       }
     } catch (err) {
       console.error("Error eliminando agente:", err);
-      alert("Error de conexión al servidor");
+      toast.error("Error de conexión al servidor");
     }
+
   };
 
   return (
     <Layout>
       <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
-        <header className="flex items-center gap-4">
-          <div className="bg-[#ffbc2d]/10 p-3 rounded-2xl">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="bg-[#ffbc2d]/10 p-3 rounded-2xl shrink-0">
             <UsersIcon size={32} className="text-[#ffbc2d]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e9edef]">Gestión de Agentes</h1>
-            <p className="text-[#8696a0] text-sm font-medium">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#e9edef]">Gestión de Agentes</h1>
+            <p className="text-[#8696a0] text-xs sm:text-sm font-medium">
               {currentUserProfile?.role === 'super-admin' 
                 ? "Administra todos los usuarios del sistema" 
                 : `Administra el equipo de tu empresa (${profiles.length} / ${planConfig?.limit === 999 ? '∞' : planConfig?.limit})`}
@@ -191,12 +199,12 @@ const Users = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Formulario de creación (Solo Super-Admin o Dueño de Empresa) */}
           {(currentUserProfile?.role === 'super-admin' || currentUserProfile?.is_owner) && (
             <div className="lg:col-span-1">
-              <div className="bg-[#202c33] p-6 rounded-2xl border border-[#2a3942] sticky top-0 shadow-2xl">
-              <h3 className="text-[#ffbc2d] font-bold mb-6 flex items-center gap-2 text-sm uppercase tracking-wider">
+              <div className="bg-[#202c33] p-5 sm:p-6 rounded-2xl border border-[#2a3942] lg:sticky lg:top-0 shadow-2xl">
+              <h3 className="text-[#ffbc2d] font-bold mb-4 sm:mb-6 flex items-center gap-2 text-sm uppercase tracking-wider">
                 <UserPlus size={18} /> Nuevo Agente
               </h3>
               

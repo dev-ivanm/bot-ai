@@ -90,6 +90,7 @@ const Dashboard = () => {
   const [guardandoMemoria, setGuardandoMemoria] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showCerebroModal, setShowCerebroModal] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   // Ref para auto-scroll al final del chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -707,8 +708,10 @@ const Dashboard = () => {
           </button>
         </header>
 
-        <main className="flex-1 flex flex-row min-h-0 overflow-hidden">
-          <section className="w-[300px] flex-shrink-0 border-r border-[#2a3942] flex flex-col bg-[#111b21] min-h-0">
+        <main className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
+          <section className={`w-full lg:w-[300px] flex-shrink-0 border-r border-[#2a3942] flex flex-col bg-[#111b21] min-h-0 ${
+            showMobileChat ? "hidden lg:flex" : "flex"
+          }`}>
             <div className="p-4 flex justify-between items-center bg-[#202c33]">
               <span className="text-xs font-bold uppercase text-[#8696a0]">
                 Chats
@@ -745,6 +748,7 @@ const Dashboard = () => {
                   key={chat.id}
                   onClick={() => {
                     setChatSeleccionado(chat);
+                    setShowMobileChat(true);
                     void fetchMessages(chat);
                   }}
                   className={`p-4 border-b border-[#2a3942] cursor-pointer hover:bg-[#202c33] ${chatSeleccionado?.id === chat.id ? "bg-[#2a3942]" : ""}`}
@@ -761,13 +765,23 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <section className="flex-1 flex flex-col bg-[#0b141a] relative min-h-0 border-r border-[#2a3942]">
+          <section className={`flex-1 flex flex-col bg-[#0b141a] relative min-h-0 border-r border-[#2a3942] ${
+            !showMobileChat ? "hidden lg:flex" : "flex"
+          }`}>
             {chatSeleccionado ? (
               <>
                 <div className="p-4 bg-[#202c33] border-b border-[#2a3942] flex justify-between items-center">
-                  <span className="font-bold text-sm">
-                    {chatSeleccionado.contact?.name || chatSeleccionado.id.split("@")[0]}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setShowMobileChat(false)}
+                      className="lg:hidden p-1 -ml-1 text-[#8696a0] hover:text-[#e9edef]"
+                    >
+                      <X size={20} />
+                    </button>
+                    <span className="font-bold text-sm">
+                      {chatSeleccionado.contact?.name || chatSeleccionado.id.split("@")[0]}
+                    </span>
+                  </div>
                   {typingChatId === chatSeleccionado.id && (
                     <span className="text-xs text-[#00a884] animate-pulse font-medium">
                       escribiendo...

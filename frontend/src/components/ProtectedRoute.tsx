@@ -9,7 +9,8 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, mandatoryOnboarding = true }: ProtectedRouteProps) => {
-  const { session, isVerified, hasEmpresa, isPlanExpired, profileLoading } = useAuth();
+  const { session, isVerified, hasEmpresa, isPlanExpired, isOwner, profileLoading } = useAuth();
+
   const location = useLocation();
 
   if (!session) {
@@ -35,14 +36,12 @@ const ProtectedRoute = ({ children, mandatoryOnboarding = true }: ProtectedRoute
     return <Navigate to="/profile" replace />;
   }
 
-  // 3. Gate: Plan Expiration
-  // Redirect to /expired-plan if the plan is expired, EXCEPT  // Si el plan ha expirado, permitir solo Chats, Perfil y Upgrade
-  const allowedPathsWhenExpired = ["/dashboard", "/profile", "/upgrade"];
-  const isPathAllowed = allowedPathsWhenExpired.some(path => location.pathname.startsWith(path));
-
-  if (isPlanExpired && !isPathAllowed) {
-    return <Navigate to="/dashboard" replace />;
+  // 3. Gate: Plan Expiration (Transición al Plan Gratis)
+  // Si el plan expiró, solo el dueño (1 agente) puede seguir operando.
+  if (isPlanExpired && !isOwner && location.pathname !== "/expired-plan") {
+      return <Navigate to="/expired-plan" replace />;
   }
+
 
   return <>{children}</>;
 };

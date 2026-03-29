@@ -167,13 +167,13 @@ const Stats = () => {
   return (
     <Layout>
       <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
-        <header className="flex items-center gap-4">
-          <div className="bg-[#a461d8]/10 p-3 rounded-2xl">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="bg-[#a461d8]/10 p-3 rounded-2xl shrink-0">
             <BarChart3 size={32} className="text-[#a461d8]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#e9edef]">Estadísticas Globales</h1>
-            <p className="text-[#8696a0] text-sm font-medium">Métricas de rendimiento y actividad del sistema</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#e9edef]">Estadísticas Globales</h1>
+            <p className="text-[#8696a0] text-xs sm:text-sm font-medium">Métricas de rendimiento y actividad del sistema</p>
           </div>
         </header>
 
@@ -182,7 +182,7 @@ const Stats = () => {
             <p className="text-[#8696a0] animate-pulse italic">Analizando datos...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {cards.map((card, i) => (
               <div key={i} className="bg-[#202c33] p-6 rounded-2xl border border-[#2a3942] shadow-xl flex flex-col gap-4 hover:border-[#38444d] transition-all group">
                 <div className="flex justify-between items-start">
@@ -199,7 +199,7 @@ const Stats = () => {
             ))}
 
             {/* Sales Funnel */}
-            <div className="md:col-span-2 lg:col-span-4 bg-[#202c33] p-8 rounded-2xl border border-[#2a3942] shadow-2xl">
+            <div className="sm:col-span-2 lg:col-span-4 bg-[#202c33] p-5 sm:p-8 rounded-2xl border border-[#2a3942] shadow-2xl">
               <h3 className="text-[#e9edef] font-bold flex items-center gap-2 mb-6">
                 <TrendingUp size={18} className="text-[#a461d8]" /> Embudo de Ventas
               </h3>
@@ -210,25 +210,25 @@ const Stats = () => {
                   { label: "Interesados", count: stats.funnel.interesado, color: "#ffbc2d", width: "55%" },
                   { label: "Clientes", count: stats.funnel.cliente, color: "#00a884", width: "30%" },
                 ].map((stage, i) => (
-                  <div key={i} className="w-full flex items-center gap-4">
-                    <div className="w-28 text-right">
-                      <p className="text-[#8696a0] text-[10px] uppercase font-bold tracking-widest">{stage.label}</p>
+                  <div key={i} className="w-full flex items-center gap-2 sm:gap-4">
+                    <div className="w-20 sm:w-28 text-right shrink-0">
+                      <p className="text-[#8696a0] text-[9px] sm:text-[10px] uppercase font-bold tracking-widest leading-tight">{stage.label}</p>
                     </div>
                     <div className="flex-1 flex items-center justify-center">
                       <div 
-                        className="h-10 rounded-lg flex items-center justify-center transition-all duration-500 hover:brightness-125 cursor-default"
+                        className="h-8 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-500 hover:brightness-125 cursor-default"
                         style={{ 
                           width: stage.width, 
                           backgroundColor: `${stage.color}20`,
-                          borderLeft: `3px solid ${stage.color}`,
-                          borderRight: `3px solid ${stage.color}`
+                          borderLeft: `2px sm:border-left-3 solid ${stage.color}`,
+                          borderRight: `2px sm:border-right-3 solid ${stage.color}`
                         }}
                       >
-                        <span className="text-[#e9edef] font-black text-sm">{stage.count}</span>
+                        <span className="text-[#e9edef] font-black text-xs sm:text-sm">{stage.count}</span>
                       </div>
                     </div>
-                    <div className="w-16">
-                      <p className="text-[#54656f] text-[10px] font-bold">
+                    <div className="w-12 sm:w-16 shrink-0">
+                      <p className="text-[#54656f] text-[9px] sm:text-[10px] font-bold">
                         {stats.funnel.total > 0 ? Math.round((stage.count / stats.funnel.total) * 100) : 0}%
                       </p>
                     </div>
@@ -242,7 +242,7 @@ const Stats = () => {
               </div>
             </div>
 
-            <div className="md:col-span-2 lg:col-span-3 bg-[#202c33] p-8 rounded-2xl border border-[#2a3942] shadow-2xl flex flex-col gap-6">
+            <div className="sm:col-span-2 lg:col-span-3 bg-[#202c33] p-5 sm:p-8 rounded-2xl border border-[#2a3942] shadow-2xl flex flex-col gap-6">
                <div className="flex justify-between items-center">
                  <h3 className="text-[#e9edef] font-bold flex items-center gap-2">
                    <Activity size={18} className="text-[#00a884]" /> Actividad del Sistema

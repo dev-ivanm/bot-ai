@@ -180,32 +180,32 @@ const Leads = () => {
   return (
     <Layout>
       <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="bg-[#00a884]/10 p-3 rounded-2xl">
+            <div className="bg-[#00a884]/10 p-3 rounded-2xl shrink-0">
               <TrendingUp size={32} className="text-[#00a884]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#e9edef]">Leads y Ventas</h1>
-              <p className="text-[#8696a0] text-sm font-medium">Análisis de prospectos con Inteligencia Artificial</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#e9edef]">Leads y Ventas</h1>
+              <p className="text-[#8696a0] text-xs sm:text-sm font-medium">Análisis de prospectos con Inteligencia Artificial</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {selectionMode ? (
               <>
                 <button 
                   onClick={selectAllHotLeads}
-                  className="flex items-center gap-2 bg-[#ffbc2d]/10 text-[#ffbc2d] px-4 py-2 rounded-xl hover:bg-[#ffbc2d]/20 transition-all text-sm font-semibold border border-[#ffbc2d]/20"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#ffbc2d]/10 text-[#ffbc2d] px-4 py-2 rounded-xl hover:bg-[#ffbc2d]/20 transition-all text-xs font-semibold border border-[#ffbc2d]/20"
                 >
-                  <Zap size={16} /> Hot Leads
+                  <Zap size={14} /> Hot Leads
                 </button>
                 <button 
                   onClick={() => { setShowCampaignModal(true); }}
                   disabled={selectedLeads.length === 0}
-                  className="flex items-center gap-2 bg-[#00a884] text-white px-4 py-2 rounded-xl hover:bg-[#008f6f] transition-all text-sm font-bold disabled:opacity-30"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#00a884] text-white px-4 py-2 rounded-xl hover:bg-[#008f6f] transition-all text-xs font-bold disabled:opacity-30"
                 >
-                  <Send size={16} /> Campaña ({selectedLeads.length})
+                  <Send size={14} /> Campaña ({selectedLeads.length})
                 </button>
                 <button 
                   onClick={() => { setSelectionMode(false); setSelectedLeads([]); }}
@@ -219,16 +219,16 @@ const Leads = () => {
                 {(authRole === 'super-admin' || authPlan === 'enterprise') && (
                   <button 
                     onClick={() => setSelectionMode(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#00a884] to-[#00c896] text-white px-4 py-2 rounded-xl hover:brightness-110 transition-all text-sm font-bold shadow-lg"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-[#00a884] to-[#00c896] text-white px-4 py-2 rounded-xl hover:brightness-110 transition-all text-xs font-bold shadow-lg"
                   >
-                    <Send size={16} /> Iniciar Campaña
+                    <Send size={14} /> Iniciar Campaña
                   </button>
                 )}
                 <button 
                   onClick={() => fetchLeads()}
-                  className="flex items-center gap-2 bg-[#2a3942] text-[#e9edef] px-4 py-2 rounded-xl hover:bg-[#3b4a54] transition-all text-sm font-semibold"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#2a3942] text-[#e9edef] px-4 py-2 rounded-xl hover:bg-[#3b4a54] transition-all text-xs font-semibold"
                 >
-                  <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+                  <RefreshCcw size={14} className={loading ? "animate-spin" : ""} />
                   Actualizar
                 </button>
               </>
@@ -236,36 +236,36 @@ const Leads = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#202c33] p-6 rounded-2xl border border-[#2a3942]">
-            <p className="text-[#8696a0] text-xs font-bold uppercase tracking-widest mb-1">Total Prospectos</p>
-            <p className="text-3xl font-bold text-[#e9edef]">{leads.length}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="bg-[#202c33] p-4 sm:p-6 rounded-2xl border border-[#2a3942]">
+            <p className="text-[#8696a0] text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Total Prospectos</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[#e9edef]">{leads.length}</p>
           </div>
-          <div className="bg-[#202c33] p-6 rounded-2xl border border-[#2a3942]">
-            <p className="text-[#8696a0] text-xs font-bold uppercase tracking-widest mb-1">Hot Leads ({'>'} 80%)</p>
-            <p className="text-3xl font-bold text-[#00a884]">{leads.filter(l => l.probabilidad_compra >= 80).length}</p>
+          <div className="bg-[#202c33] p-4 sm:p-6 rounded-2xl border border-[#2a3942]">
+            <p className="text-[#8696a0] text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Hot Leads ({'>'} 80%)</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[#00a884]">{leads.filter(l => l.probabilidad_compra >= 80).length}</p>
           </div>
-          <div className="bg-[#202c33] p-6 rounded-2xl border border-[#2a3942]">
-            <p className="text-[#8696a0] text-xs font-bold uppercase tracking-widest mb-1">Interés Promedio</p>
-            <p className="text-3xl font-bold text-[#ffbc2d]">
+          <div className="bg-[#202c33] p-4 sm:p-6 rounded-2xl border border-[#2a3942] sm:col-span-2 lg:col-span-1">
+            <p className="text-[#8696a0] text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Interés Promedio</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[#ffbc2d]">
               {leads.length > 0 ? Math.round(leads.reduce((a, b) => a + b.probabilidad_compra, 0) / leads.length) : 0}%
             </p>
           </div>
         </div>
 
         <div className="bg-[#202c33] rounded-2xl border border-[#2a3942] overflow-hidden shadow-2xl">
-          <div className="p-6 border-b border-[#2a3942] bg-[#1c272d] flex items-center justify-between">
-            <h3 className="text-[#e9edef] font-bold flex items-center gap-2">
+          <div className="p-4 sm:p-6 border-b border-[#2a3942] bg-[#1c272d] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h3 className="text-[#e9edef] font-bold flex items-center gap-2 whitespace-nowrap">
               <Zap size={18} className="text-[#ffbc2d]" /> Embudos de Conversión
             </h3>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <Search size={16} className="absolute left-3 top-2.5 text-[#54656f]" />
               <input 
                 type="text" 
                 placeholder="Buscar lead..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#111b21] text-xs p-2.5 pl-10 rounded-lg border border-[#2a3942] text-[#e9edef] outline-none"
+                className="w-full bg-[#111b21] text-xs p-2.5 pl-10 rounded-lg border border-[#2a3942] text-[#e9edef] outline-none focus:border-[#00a884]/50"
               />
             </div>
           </div>

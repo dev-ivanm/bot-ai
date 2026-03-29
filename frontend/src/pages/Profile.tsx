@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
+import { toast } from "react-hot-toast";
 import Layout from "../components/Layout";
+
 import { 
   User, 
   Building2, 
@@ -110,8 +112,9 @@ const Profile = () => {
         }
       }, 2000);
     } catch (err) {
-      alert("Error: " + (err as Error).message);
+      toast.error("Error al guardar perfil: " + (err as Error).message);
     } finally {
+
       setSaving(false);
     }
   };

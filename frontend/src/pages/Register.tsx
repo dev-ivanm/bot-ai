@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+
 import { supabase } from "../lib/supabase";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
@@ -10,13 +12,21 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const translateError = (msg: string) => {
+    if (msg.includes("User already registered") || msg.includes("already exists")) return "El usuario ya está registrado";
+    if (msg.includes("Email not confirmed")) return "Por favor, confirma tu correo electrónico";
+    if (msg.includes("Password should be at least")) return "La contraseña debe tener al menos 6 caracteres";
+    if (msg.includes("Database error")) return "Error de base de datos";
+    return msg;
+  };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+
 
     try {
       // Llamar a nuestro endpoint personalizado que crea todo (Auth + Empresa + Perfil)
@@ -46,8 +56,9 @@ const Register = () => {
       navigate("/verify-email");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      setError(message);
+      toast.error(translateError(message));
     } finally {
+
       setLoading(false);
     }
   };
@@ -64,12 +75,8 @@ const Register = () => {
           <p className="text-[#8696a0] mt-2">Empieza tu prueba PRO de 7 días gratis</p>
         </div>
 
-        <div className="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#202c33]">
-          {error && (
-            <div className="bg-[#ea4335]/10 border border-[#ea4335]/20 text-[#ea4335] px-4 py-3 rounded-xl text-sm mb-6 flex items-center gap-2">
-              <span className="font-bold">Error:</span> {error}
-            </div>
-          )}
+<div className="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#202c33]">
+
 
           <form onSubmit={handleRegister} className="space-y-5">
             <div>

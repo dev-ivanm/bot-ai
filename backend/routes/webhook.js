@@ -137,7 +137,32 @@ async function handleMessagesUpsert(instanceName, messageData, req) {
     }
     console.log(`[Webhook] Perfil encontrado para ${instanceName} (ID: ${perfil.id})`);
 
+    // --- NUEVO: Verificar si el plan de la empresa ha expirado ---
+    const { data: userProfile } = await supabase
+        .from('perfiles_usuario')
+        .select('empresa_id')
+        .eq('id', perfil.id)
+        .single();
+    
+    let isPlanExpired = false;
+    if (userProfile?.empresa_id) {
+        const { data: empresa } = await supabase
+            .from('empresas')
+            .select('vencimiento_plan, plan')
+            .eq('id', userProfile.empresa_id)
+            .single();
+        
+        if (empresa?.vencimiento_plan && empresa.plan !== 'gratis') {
+            isPlanExpired = new Date(empresa.vencimiento_plan) < new Date();
+        }
+    }
+
+    if (isPlanExpired) {
+        console.log(`[Webhook] ⚠️ PLAN EXPIRADO para ${instanceName}. Usando solo personalidad (sin cerebro).`);
+    }
+
     // 2.5 Guardar mensaje entrante en mensajes_wa para permanencia
+
     try {
         await supabase.from('mensajes_wa').insert({
             perfil_id: perfil.id,
@@ -173,14 +198,15 @@ async function handleMessagesUpsert(instanceName, messageData, req) {
             }));
 
         // --- NUEVO: Buscar conocimiento en memoria_bot (El "Cerebro") ---
-        // Limpiamos los signos de puntuación de las palabras para no corromper la sintaxis de Supabase (.or usa comas)
+        // SOLO si el plan NO ha expirado
+        let knowledgeText = "";
         const words = text
             .split(' ')
             .map(w => w.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, ''))
             .filter(w => w.length > 3);
-        let knowledgeText = "";
         
-        if (words.length > 0) {
+        if (!isPlanExpired && words.length > 0) {
+
             const { data: knowledge, error: knowledgeErr } = await supabase
                 .from('memoria_bot')
                 .select('contenido')

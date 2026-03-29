@@ -17,7 +17,12 @@ import { io } from "socket.io-client";
 import NotificationBell from "./NotificationBell";
 import { canAccess, type Feature, PLANS } from "../config/planConfig";
 
-const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { signOut, session, isPlanExpired, plan, role, isOwner, isTrial, vencimientoPlan, limits } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -116,7 +121,9 @@ const Sidebar = () => {
   const currentPlan = PLANS[plan];
 
   return (
-    <aside className="w-64 bg-[#202c33] border-r border-[#2a3942] flex flex-col h-full overflow-hidden">
+    <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#202c33] border-r border-[#2a3942] flex flex-col h-full overflow-hidden transition-transform duration-300 z-50 ${
+      isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+    }`}>
       <div className="p-6 flex items-center justify-between border-b border-[#2a3942]">
         <div className="flex items-center gap-3">
           {/* <div className="bg-[#00a884] p-2 rounded-lg">
@@ -171,7 +178,10 @@ const Sidebar = () => {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate("/upgrade")}
+                onClick={() => {
+                  navigate("/upgrade");
+                  onClose?.();
+                }}
                 className="flex items-center gap-4 px-4 py-3 rounded-lg transition-all text-[#54656f] hover:bg-[#2a3942]/50 group relative"
               >
                 {item.icon}
@@ -185,6 +195,7 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => onClose?.()}
               className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
                 isActive 
                   ? "bg-[#2a3942] text-[#00a884] font-semibold shadow-lg" 
@@ -199,8 +210,9 @@ const Sidebar = () => {
 
         {/* Link exclusivo super-admin: Gestión de Planes */}
         {role === 'super-admin' && (
-          <Link
+            <Link
             to="/admin/planes"
+            onClick={() => onClose?.()}
             className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
               location.pathname === '/admin/planes'
                 ? "bg-[#2a3942] text-[#a461d8] font-semibold shadow-lg"
@@ -219,6 +231,7 @@ const Sidebar = () => {
 
         <Link
           to="/profile"
+          onClick={() => onClose?.()}
           className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
             location.pathname === '/profile'
               ? "bg-[#2a3942] text-[#00a884] font-semibold shadow-lg"
@@ -275,7 +288,10 @@ const Sidebar = () => {
             {plan !== "enterprise" && (
               <div className="mt-4 px-2">
                 <button
-                  onClick={() => navigate("/upgrade")}
+                  onClick={() => {
+                    navigate("/upgrade");
+                    onClose?.();
+                  }}
                   className="w-full bg-gradient-to-r from-[#a461d8]/10 to-[#7c3aed]/10 border border-[#a461d8]/20 p-4 rounded-xl hover:border-[#a461d8]/40 transition-all group text-left"
                 >
                   <div className="flex items-center gap-2 mb-1">

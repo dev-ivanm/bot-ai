@@ -18,9 +18,9 @@ async function checkPlanAccess(feature, userId) {
     // Verificar si el plan ha expirado (solo para planes que no sean 'gratis')
     if (empresa?.plan !== 'gratis' && empresa?.vencimiento_plan) {
         if (new Date(empresa.vencimiento_plan) < new Date()) {
-            // Si el plan expiró, solo permitimos 'chats' (y 'upgrade'/'profile' que no pasan por aquí usualmente)
-            if (feature === 'chats') return true;
-            return false; // Plan expirado para cualquier otra feature
+            // Si el plan expiró, NO bloqueamos todo. En cambio, devolvemos el acceso
+            // basado en lo que permite el plan 'gratis' (principalmente 'chats')
+            return checkPlan('gratis', feature);
         }
     }
     

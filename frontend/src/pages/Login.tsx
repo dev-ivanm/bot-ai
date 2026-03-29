@@ -1,13 +1,24 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { toast } from "react-hot-toast";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const translateError = (msg: string) => {
+    if (msg.includes("Invalid login credentials")) return "Credenciales de acceso inválidas";
+    if (msg.includes("Email not confirmed")) return "Por favor, confirma tu correo electrónico";
+    if (msg.includes("User not found")) return "Usuario no encontrado";
+    if (msg.includes("Password should be at least")) return "La contraseña debe tener al menos 6 caracteres";
+    return msg;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setLoading(true);
     try {
@@ -16,8 +27,10 @@ const Login = () => {
         password,
       });
       if (error) {
-        alert("Error: " + error.message);
+        toast.error(translateError(error.message));
       } else {
+
+
         // Assuming successful login, you might want to navigate or update UI
         // The original snippet had navigate("/verify-email"); here, but it's usually for registration flow.
         // For login, you'd typically navigate to a dashboard or home page.
@@ -26,8 +39,10 @@ const Login = () => {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      alert(message); // Using alert as setError is not defined
+      toast.error(translateError(message));
     } finally {
+
+
       setLoading(false);
     }
   };

@@ -15,13 +15,32 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
+
 
 function App() {
   const { session } = useAuth();
 
   return (
     <BrowserRouter>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "#202c33",
+            color: "#e9edef",
+            border: "1px solid #2a3942",
+          },
+          success: {
+            iconTheme: {
+              primary: "#00a884",
+              secondary: "#e9edef",
+            },
+          },
+        }}
+      />
       <Routes>
+
         {/* Public Routes */}
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/register" element={!session ? <Register /> : <Navigate to="/dashboard" />} />

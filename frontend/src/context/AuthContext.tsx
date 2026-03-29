@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsPlanExpired(!!data.isPlanExpired);
         setVencimientoPlan(data.empresa?.vencimiento_plan || null);
         setLimits({
-          agentes: data.empresa?.limite_agentes || 1
+          agentes: (data.isPlanExpired || data.empresa?.plan === 'gratis') ? 1 : (data.empresa?.limite_agentes || 1)
         });
       }
     } catch (err: unknown) {

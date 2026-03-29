@@ -3,7 +3,7 @@ import Layout from "../components/Layout";
 import { useAuth } from "../context/auth-context";
 import { supabase } from "../lib/supabase";
 import { 
-  Crown, Check, X, Zap, ArrowRight, Send, Clock, CheckCircle, XCircle
+  Crown, Check, X, ArrowRight, Send, Clock, CheckCircle, XCircle
 } from "lucide-react";
 import { PLANS, type PlanId } from "../config/planConfig";
 
@@ -95,26 +95,26 @@ const Upgrade = () => {
     }
   };
 
-  const features = [
-    { name: "Instancias WhatsApp", gratis: "1", pro: "3", enterprise: "∞" },
-    { name: "Agentes", gratis: "1", pro: "5", enterprise: "∞" },
-    { name: "Chats en Tiempo Real", gratis: true, pro: true, enterprise: true },
-    { name: "Cerebro IA (Memoria)", gratis: false, pro: "10 entradas", enterprise: "∞" },
-    { name: "Prompt Personalizado", gratis: false, pro: true, enterprise: true },
-    { name: "CRM / Leads", gratis: false, pro: "Solo vista", enterprise: "Completo" },
-    { name: "AI Lead Scoring", gratis: false, pro: false, enterprise: true },
-    { name: "Campañas IA Masivas", gratis: false, pro: false, enterprise: true },
-    { name: "Estadísticas", gratis: false, pro: "Básicas", enterprise: "Avanzadas" },
-    { name: "Embudo de Ventas", gratis: false, pro: false, enterprise: true },
-    { name: "Ranking de Agentes", gratis: false, pro: false, enterprise: true },
-    { name: "Notificaciones", gratis: false, pro: false, enterprise: true },
-  ];
+  // const features = [
+  //   { name: "Instancias WhatsApp", gratis: "1", pro: "3", enterprise: "∞" },
+  //   { name: "Agentes", gratis: "1", pro: "5", enterprise: "∞" },
+  //   { name: "Chats en Tiempo Real", gratis: true, pro: true, enterprise: true },
+  //   { name: "Cerebro IA (Memoria)", gratis: false, pro: "10 entradas", enterprise: "∞" },
+  //   { name: "Prompt Personalizado", gratis: false, pro: true, enterprise: true },
+  //   { name: "CRM / Leads", gratis: false, pro: "Solo vista", enterprise: "Completo" },
+  //   { name: "AI Lead Scoring", gratis: false, pro: false, enterprise: true },
+  //   { name: "Campañas IA Masivas", gratis: false, pro: false, enterprise: true },
+  //   { name: "Estadísticas", gratis: false, pro: "Básicas", enterprise: "Avanzadas" },
+  //   { name: "Embudo de Ventas", gratis: false, pro: false, enterprise: true },
+  //   { name: "Ranking de Agentes", gratis: false, pro: false, enterprise: true },
+  //   { name: "Notificaciones", gratis: false, pro: false, enterprise: true },
+  // ];
 
-  const renderCell = (value: boolean | string) => {
-    if (value === true) return <Check size={16} className="text-[#00a884] mx-auto" />;
-    if (value === false) return <X size={16} className="text-[#54656f] mx-auto" />;
-    return <span className="text-[#e9edef] text-xs font-medium">{value}</span>;
-  };
+  // const renderCell = (value: boolean | string) => {
+  //   if (value === true) return <Check size={16} className="text-[#00a884] mx-auto" />;
+  //   if (value === false) return <X size={16} className="text-[#54656f] mx-auto" />;
+  //   return <span className="text-[#e9edef] text-xs font-medium">{value}</span>;
+  // };
 
   const planOrder: PlanId[] = ["gratis", "pro", "enterprise"];
 
@@ -151,7 +151,7 @@ const Upgrade = () => {
 
   return (
     <Layout>
-      <div className="p-8 flex flex-col gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
+      <div className="p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 flex-1 overflow-y-auto custom-scrollbar bg-[#0b141a]">
 
         {/* Toast */}
         {toast && (
@@ -168,15 +168,15 @@ const Upgrade = () => {
         )}
 
         {/* Hero */}
-        <div className="text-center max-w-2xl mx-auto mb-4">
+        <div className="text-center max-w-2xl mx-auto mb-4 px-2">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#a461d8]/10 to-[#7c3aed]/10 border border-[#a461d8]/20 px-4 py-1.5 rounded-full mb-6">
             <Crown size={14} className="text-[#a461d8]" />
             <span className="text-[#a461d8] text-[10px] font-black uppercase tracking-widest">Planes &amp; Precios</span>
           </div>
-          <h1 className="text-3xl font-black text-[#e9edef] mb-3">
+          <h1 className="text-xl sm:text-2xl font-black text-[#e9edef] mb-3">
             Potencia tu negocio con <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#34b7f1]">Inteligencia Artificial</span>
           </h1>
-          <p className="text-[#8696a0] text-sm">
+          <p className="text-[#8696a0] text-xs sm:text-sm">
             Elige el plan que mejor se adapte a tu empresa. Solicita el upgrade y un administrador lo activará tras verificar el pago.
           </p>
         </div>
@@ -262,7 +262,7 @@ const Upgrade = () => {
         </div>
 
         {/* Feature Comparison Table */}
-        <div className="bg-[#202c33] rounded-2xl border border-[#2a3942] overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
+        {/* <div className="bg-[#202c33] rounded-2xl border border-[#2a3942] overflow-hidden shadow-2xl max-w-5xl mx-auto w-full">
           <div className="p-6 border-b border-[#2a3942] bg-[#1c272d]">
             <h3 className="text-[#e9edef] font-bold flex items-center gap-2">
               <Zap size={18} className="text-[#ffbc2d]" /> Comparación Completa
@@ -294,7 +294,7 @@ const Upgrade = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Request Modal */}
