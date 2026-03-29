@@ -1507,7 +1507,8 @@ router.post('/auth/forgot-password', async (req, res) => {
             email: email,
             options: { 
                 // Usamos el origin del request o una variable de entorno
-                redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password` 
+                // redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password` 
+                redirectTo: `${process.env.FRONTEND_URL || 'https://bot-ai-brown-one.vercel.app'}/reset-password` 
             }
         });
 
