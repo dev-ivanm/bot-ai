@@ -1506,8 +1506,8 @@ router.post('/auth/forgot-password', async (req, res) => {
             type: 'recovery',
             email: email,
             options: { 
-                // Usamos el origin del request o una variable de entorno
-                redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password` 
+                // Normalizamos la URL para evitar dobles slashes si la variable ya trae uno
+                redirectTo: `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/reset-password` 
             }
         });
 
