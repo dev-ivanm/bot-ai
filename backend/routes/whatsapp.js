@@ -1358,33 +1358,15 @@ router.get('/upgrade/my-request', async (req, res) => {
 // PERFIL Y VERIFICACIÓN OTP
 // =============================================
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+const resendClient = new Resend(process.env.RESEND_API_KEY);
 
-// Transporter para nodemailer (Cambiando a puerto 465 con SSL para mayor compatibilidad)
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // SSL implícito en puerto 465
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    family: 4, 
-    logger: true,
-    debug: true
-});
-
-// Verificación de conexión inmediata al iniciar o recargar
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('[SMTP] Error de verificación inicial:', error);
-    } else {
-        console.log('[SMTP] Servidor listo para enviar mensajes (IPv4 Force)');
-    }
-});
+// (Opcional: Verificación de API Key al inicio)
+if (!process.env.RESEND_API_KEY) {
+    console.warn('[Resend] Advertencia: RESEND_API_KEY no configurada. Los correos no se enviarán.');
+} else {
+    console.log('[Resend] Cliente configurado correctamente');
+}
 
 
 // POST /api/whatsapp/auth/register
@@ -1495,10 +1477,10 @@ router.post('/auth/forgot-password', async (req, res) => {
 
         const recoveryLink = data.properties.action_link;
 
-        // 2. Enviar email con el formato de la casa (Bot AI)
-        const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM || `"Bot AI" <${process.env.SMTP_USER}>`,
-            to: email,
+        // 2. Enviar email con Resend
+        const { data: emailData, error: emailError } = await resendClient.emails.send({
+            from: 'Bot AI <onboarding@resend.dev>',
+            to: [email],
             subject: 'Recupera tu contraseña - Bot AI',
             html: `
                 <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -1513,19 +1495,13 @@ router.post('/auth/forgot-password', async (req, res) => {
                             Restablecer contraseña
                         </a>
                     </div>
-                    <p style="font-size: 12px; color: #8696a0; text-align: center;">
-                        Si no solicitaste este cambio, puedes ignorar este correo con seguridad.<br>
-                        Este enlace es válido por tiempo limitado.
-                    </p>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="font-size: 10px; color: #b1b3b5; text-align: center;">
-                        © ${new Date().getFullYear()} Bot AI Solutions. Todos los derechos reservados.
-                    </p>
+                    <p style="font-size: 12px; color: #8696a0; text-align: center;">Si no solicitaste este cambio, puedes ignorar este correo.</p>
                 </div>
             `
         });
 
-        console.log(`[Forgot-Password] Email enviado a ${email}:`, info.messageId);
+        if (emailError) throw emailError;
+        console.log('[Forgot-Password] Email enviado con éxito via Resend:', emailData.id);
         res.json({ success: true, message: 'Email de recuperación enviado' });
 
     } catch (err) {
@@ -1570,25 +1546,29 @@ router.post('/otp/send', async (req, res) => {
 
         console.log(`[OTP] Enviando código a ${user.email} (UserId: ${userId})`);
 
-        // Enviar email
-        const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM || `"Bot AI" <${process.env.SMTP_USER}>`,
-            to: user.email,
+        // Enviar email con Resend
+        const { data: emailData, error: emailError } = await resendClient.emails.send({
+            from: 'Bot AI <onboarding@resend.dev>',
+            to: [user.email],
             subject: 'Tu código de verificación - Bot AI',
             html: `
                 <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                    <h2 style="color: #00a884; text-align: center;">Verifica tu correo</h2>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1 style="color: #00a884; margin: 0;">Bot AI</h1>
+                    </div>
+                    <h2 style="color: #111b21; text-align: center;">Verifica tu correo</h2>
                     <p>Hola,</p>
                     <p>Usa el siguiente código para completar tu registro en Bot AI:</p>
                     <div style="background: #f4f7f9; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #111b21; border-radius: 8px; margin: 20px 0;">
                         ${otp}
                     </div>
-                    <p style="font-size: 12px; color: #8696a0;">Este código expira en 10 minutos.</p>
+                    <p style="font-size: 12px; color: #8696a0; text-align: center;">Este código expira en 10 minutos.</p>
                 </div>
             `
         });
 
-        console.log('[OTP] Email enviado con éxito:', info.messageId);
+        if (emailError) throw emailError;
+        console.log('[OTP] Email enviado con éxito via Resend:', emailData.id);
         res.json({ success: true, message: 'OTP enviado' });
     } catch (err) {
         console.error('[OTP] Error sending:', err);
