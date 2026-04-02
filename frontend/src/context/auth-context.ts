@@ -15,6 +15,7 @@ export interface AuthContextType {
   vencimientoPlan: string | null;
   limits: { agentes: number };
   profileLoading: boolean;
+  hasSeenTutorial: boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -24,6 +25,7 @@ export interface ProfileResponse {
     empresa_id: string;
     role: string;
     is_owner: boolean;
+    has_seen_tutorial: boolean;
   };
   empresa?: {
     plan: string;
@@ -47,6 +49,7 @@ export const AuthContext = createContext<AuthContextType>({
   vencimientoPlan: null,
   limits: { agentes: 1 },
   profileLoading: true,
+  hasSeenTutorial: true, // Default to true to avoid showing it before profile is loaded
   refreshProfile: async () => {},
 });
 

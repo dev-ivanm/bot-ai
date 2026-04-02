@@ -381,6 +381,25 @@ router.post('/chat/findMessages/:instanceName', async (req, res) => {
 
 // --- GESTIÓN DE PERFILES (Evita 403 Forbidden de RLS) ---
 
+// POST /api/whatsapp/profile/complete-tutorial
+router.post('/profile/complete-tutorial', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        const { error } = await supabase
+            .from('perfiles_usuario')
+            .update({ has_seen_tutorial: true })
+            .eq('id', userId);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[Profile] Error updating tutorial status:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // GET /api/whatsapp/profile/me?userId=...
 router.get('/profile/me', async (req, res) => {
     const { userId } = req.query;

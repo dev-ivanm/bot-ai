@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [vencimientoPlan, setVencimientoPlan] = useState<string | null>(null);
   const [limits, setLimits] = useState({ agentes: 1 });
   const [profileLoading, setProfileLoading] = useState(true);
+  const [hasSeenTutorial, setHasSeenTutorial] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
@@ -38,6 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsTrial(!!data.empresa?.is_trial);
         setIsPlanExpired(!!data.isPlanExpired);
         setVencimientoPlan(data.empresa?.vencimiento_plan || null);
+        setHasSeenTutorial(!!data.profile?.has_seen_tutorial);
         setLimits({
           agentes: (data.isPlanExpired || data.empresa?.plan === 'gratis') ? 1 : (data.empresa?.limite_agentes || 1)
         });
@@ -103,6 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       vencimientoPlan,
       limits,
       profileLoading, 
+      hasSeenTutorial,
       refreshProfile 
     }}>
       {children}

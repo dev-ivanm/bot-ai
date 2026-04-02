@@ -3,6 +3,8 @@ import { toast } from "react-hot-toast";
 import { io, Socket } from "socket.io-client";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/auth-context";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import Layout from "../components/Layout";
 import {
   LogOut,
@@ -71,7 +73,7 @@ interface Message {
 }
 
 const Dashboard = () => {
-  const { session } = useAuth();
+  const { session, profileLoading, hasSeenTutorial, refreshProfile } = useAuth();
   const [perfil, setPerfil] = useState<PerfilBot | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -272,7 +274,7 @@ const Dashboard = () => {
       }
 
       setStatus("Instancia lista. Generando QR...");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       await fetchQR(instanceName);
 
       // Configurar Webhook Global hacia Supabase como solicitó el usuario
@@ -542,7 +544,7 @@ const Dashboard = () => {
     if (qr && status !== "Conectado ✅" && perfil?.instance_name) {
       pollingInterval = setInterval(() => {
         void fetchQR(perfil.instance_name);
-      }, 5000);
+      }, 60000);
     }
     return () => clearInterval(pollingInterval);
   }, [qr, status, perfil, fetchQR]);
@@ -662,7 +664,7 @@ const Dashboard = () => {
       }));
     });
 
-    socketRef.current = socket;
+socketRef.current = socket;
 
     return () => {
       socket.disconnect();
@@ -670,13 +672,99 @@ const Dashboard = () => {
     };
   }, [session, perfil?.instance_name, API_URL, cargarChats, fetchMessages]);
 
+  // Lógica del Tutorial Guiado (Onboarding)
+  useEffect(() => {
+    if (!profileLoading && !hasSeenTutorial && status !== "Verificando sesión...") {
+      const driverObj = driver({
+        showProgress: true,
+        animate: true,
+        allowClose: false,
+        nextBtnText: "Siguiente",
+        prevBtnText: "Anterior",
+        doneBtnText: "Finalizar",
+        steps: [
+          { 
+            element: "#tour-welcome", 
+            popover: { 
+              title: "¡Bienvenido a Bot-AI! 🚀", 
+              description: "Te ayudaremos a configurar tu asistente de WhatsApp en unos pocos pasos.",
+              side: "bottom",
+              align: "center"
+            } 
+          },
+          { 
+            element: "#tour-status", 
+            popover: { 
+              title: "Estado de Conexión", 
+              description: "Aquí puedes ver si tu WhatsApp está conectado o si necesitas vincularlo.",
+              side: "bottom",
+              align: "center"
+            } 
+          },
+          { 
+            element: "#tour-qr-section", 
+            popover: { 
+              title: "Vincular WhatsApp", 
+              description: "Para comenzar, haz clic en 'Vincular' y escanea el código QR desde tu teléfono (Ajustes > Dispositivos vinculados).",
+              side: "left",
+              align: "start"
+            } 
+          },
+          { 
+            element: "#tour-prompt", 
+            popover: { 
+              title: "Personalidad de la IA", 
+              description: "Aquí puedes definir cómo quieres que responda tu bot (formal, divertido, vendedor, etc).",
+              side: "bottom",
+              align: "center"
+            } 
+          },
+          { 
+            element: "#tour-cerebro", 
+            popover: { 
+              title: "El Cerebro del Bot", 
+              description: "¡Esta es la parte más importante! Aquí añades la información de tu negocio para que la IA sepa qué responder.",
+              side: "bottom",
+              align: "center"
+            } 
+          },
+          { 
+            popover: { 
+              title: "¡Todo listo!", 
+              description: "Ya puedes empezar a automatizar tus ventas por WhatsApp. ¡Suerte!",
+              side: "bottom",
+              align: "center"
+            } 
+          },
+        ],
+        onDestroyed: async () => {
+          // Marcar tutorial como completado en el backend
+          try {
+            await fetch(`${BACKEND_URL}/api/whatsapp/profile/complete-tutorial`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: session?.user.id })
+            });
+            // Refrescar perfil para que hasSeenTutorial sea true
+            void refreshProfile();
+          } catch (err) {
+            console.error("Error al finalizar tutorial:", err);
+          }
+        }
+      });
+
+      driverObj.drive();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading, hasSeenTutorial]);
+
 
   return (
     <Layout>
       <div className="h-full bg-[#0b141a] text-[#e9edef] flex flex-col overflow-hidden">
         <header className="hidden lg:flex flex-shrink-0 p-4 bg-[#202c33] flex justify-between items-center border-b border-[#2a3942]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center font-bold text-[#111b21]">
+            <div id="tour-welcome" className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center font-bold text-[#111b21]">
               {session?.user.email?.charAt(0).toUpperCase()}
             </div>
             <h1 className="font-bold flex items-center gap-2">
@@ -686,7 +774,7 @@ const Dashboard = () => {
                   qr ? "animate-pulse text-yellow-500" : "text-[#00a884]"
                 }
               />
-            WhatsApp AI - {status}
+            <span id="tour-status">WhatsApp AI - {status}</span>
             </h1>
           </div>
           <button
@@ -711,6 +799,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <button
+                    id="tour-prompt"
                     onClick={() => setShowPromptModal(true)}
                     className="text-[#34b7f1] hover:text-[#2fa3d8] transition-colors"
                     title="IA Prompt (Personalidad)"
@@ -718,6 +807,7 @@ const Dashboard = () => {
                     <Bot size={18} />
                   </button>
                   <button
+                    id="tour-cerebro"
                     onClick={() => setShowCerebroModal(true)}
                     className="text-[#00a884] hover:text-[#058f72] transition-colors"
                     title="Cerebro (Base de datos de IA)"
@@ -813,8 +903,8 @@ const Dashboard = () => {
                           key={msg.id}
                           className={`max-w-[70%] p-3 rounded-lg text-sm shadow-sm transition-all ${
                             msg.fromMe
-                              ? "self-end bg-[#005c4b] rounded-br-none border-l-2 border-[#00a884]"
-                              : "self-start bg-[#202c33] rounded-bl-none border-r-2 border-[#8696a0]"
+                              ? "self-end bg-[#005c4b] rounded-br-none border-l-2 border-[#00a884] text-white"
+                              : "self-start bg-[#202c33] rounded-bl-none border-r-2 border-[#8696a0] text-white"
                           }`}
                         >
                           <p className="break-words whitespace-pre-wrap">{msg.text}</p>
@@ -866,18 +956,17 @@ const Dashboard = () => {
                 </p>
                 {!qr && !status.includes("✅") && (
                   <div className="mt-4 flex flex-col items-center gap-2">
-                    
-                    <button
-                      onClick={() => {
-                        void manejarConexionTotal();
-                      }}
-                      className="bg-[#00a884] text-[#111b21] px-8 py-3 rounded-full font-black text-xs uppercase hover:brightness-110 active:scale-95 transition-all shadow-xl"
-                    >
-                      GENERAR QR
-                    </button>
-                      <p className="text-[10px] text-[#8696a0] font-bold uppercase tracking-wider text-center max-w-[200px]">
-                        Presiona para generar QR de conexión con WhatsApp
+                      <p className="text-[#8696a0] text-sm mb-6 max-w-md text-center">
+                        Para comenzar a usar la IA, necesitas vincular tu cuenta de WhatsApp.
                       </p>
+                      <button
+                        id="tour-qr-section"
+                        onClick={manejarConexionTotal}
+                        className="bg-[#00a884] text-[#111b21] px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-[#06cf9c] transition-colors shadow-lg"
+                      >
+                        <QrCode size={20} />
+                        Vincular WhatsApp
+                      </button>
                   </div>
                 )}
               </div>
