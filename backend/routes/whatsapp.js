@@ -894,17 +894,27 @@ router.put('/admin/update-role/:id', async (req, res) => {
     const { id } = req.params;
     const { role, is_owner, callerUserId } = req.body;
 
+    console.log(`[Role-Update] 🔄 Request received for user ${id}. Caller: ${callerUserId}`);
+    console.log(`[Role-Update] 📝 New data: role=${role}, is_owner=${is_owner}`);
+
     if (!id || !callerUserId) {
         return res.status(400).json({ error: 'ID de usuario y callerUserId son requeridos' });
     }
 
     try {
         // 1. Verificar que el caller es super-admin
-        const { data: caller } = await supabase
+        const { data: caller, error: callerError } = await supabase
             .from('perfiles_usuario')
             .select('role')
             .eq('id', callerUserId)
             .single();
+
+        if (callerError) {
+            console.error(`[Role-Update] ❌ Error fetching caller profile:`, callerError);
+            return res.status(500).json({ error: 'Error verificando permisos del administrador' });
+        }
+
+        console.log(`[Role-Update] 🔍 Admin permissions check: Caller role is "${caller?.role}"`);
 
         if (caller?.role !== 'super-admin') {
             return res.status(403).json({ error: 'Solo el super-admin puede cambiar roles' });
@@ -925,28 +935,39 @@ router.put('/admin/update-role/:id', async (req, res) => {
         }
 
         // 4. Actualizar en perfiles_usuario
+        console.log(`[Role-Update] 💾 Updating perfiles_usuario table...`);
         const { error: profileError } = await supabase
             .from('perfiles_usuario')
             .update(updateData)
             .eq('id', id);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            console.error(`[Role-Update] ❌ Database update failed:`, profileError);
+            throw profileError;
+        }
 
-        // 5. Sincronizar con Auth metadata
+        console.log(`[Role-Update] ✅ Table perfiles_usuario updated successfully`);
+
+        // 5. Sincronizar con Auth metadata (STRICT MODE)
+        console.log(`[Role-Update] 🔐 Syncing Supabase Auth metadata for ${id}...`);
         const { error: authError } = await supabase.auth.admin.updateUserById(id, {
             user_metadata: updateData
         });
 
         if (authError) {
-            console.error('[Backend] Error syncing auth metadata:', authError);
-            // No bloqueamos: el perfil ya se actualizó
+            console.error(`[Role-Update] ❌ Auth metadata sync FAILED:`, authError);
+            // Ahora bloqueamos: si no se sincroniza con Auth, el cambio no es efectivo para el login
+            return res.status(500).json({ 
+                error: 'El perfil se actualizó pero la sincronización de seguridad falló', 
+                details: authError.message 
+            });
         }
 
-        console.log(`[Backend] Rol actualizado para ${id}:`, updateData);
+        console.log(`[Role-Update] ✨ Role and Auth metadata updated successfully for ${id}`);
         res.json({ success: true, updated: updateData });
     } catch (err) {
-        console.error('[Backend] Error updating role:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('[Role-Update] 🔥 Critical error:', err);
+        res.status(500).json({ error: 'Internal server error during role update' });
     }
 });
 
