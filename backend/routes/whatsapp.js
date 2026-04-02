@@ -911,17 +911,19 @@ router.put('/admin/update-role/:id', async (req, res) => {
 
         if (callerError) {
             console.error(`[Role-Update] ❌ Error fetching caller profile:`, callerError);
-            return res.status(500).json({ error: 'Error verificando permisos del administrador' });
+            return res.status(500).json({ error: 'Error verificando permisos del administrador', details: callerError.message });
         }
 
         console.log(`[Role-Update] 🔍 Admin permissions check: Caller role is "${caller?.role}"`);
 
         if (caller?.role !== 'super-admin') {
+            console.warn(`[Role-Update] ❌ Unauthorized attempt: Caller ${callerUserId} has role "${caller?.role}"`);
             return res.status(403).json({ error: 'Solo el super-admin puede cambiar roles' });
         }
 
         // 2. No puede cambiar su propio rol (protección contra auto-degradación)
         if (id === callerUserId) {
+            console.warn(`[Role-Update] ❌ Self-degradation blocked for: ${id}`);
             return res.status(403).json({ error: 'No puedes cambiar tu propio rol' });
         }
 
@@ -931,11 +933,12 @@ router.put('/admin/update-role/:id', async (req, res) => {
         if (is_owner !== undefined) updateData.is_owner = is_owner;
 
         if (Object.keys(updateData).length === 0) {
+            console.warn(`[Role-Update] ⚠️ Empty update payload for user: ${id}`);
             return res.status(400).json({ error: 'Debes enviar al menos role o is_owner' });
         }
 
         // 4. Actualizar en perfiles_usuario
-        console.log(`[Role-Update] 💾 Updating perfiles_usuario table...`);
+        console.log(`[Role-Update] 💾 Updating perfiles_usuario for ${id} with:`, updateData);
         const { error: profileError } = await supabase
             .from('perfiles_usuario')
             .update(updateData)
@@ -943,7 +946,7 @@ router.put('/admin/update-role/:id', async (req, res) => {
 
         if (profileError) {
             console.error(`[Role-Update] ❌ Database update failed:`, profileError);
-            throw profileError;
+            return res.status(500).json({ error: 'Error en base de datos', details: profileError.message });
         }
 
         console.log(`[Role-Update] ✅ Table perfiles_usuario updated successfully`);
@@ -967,7 +970,7 @@ router.put('/admin/update-role/:id', async (req, res) => {
         res.json({ success: true, updated: updateData });
     } catch (err) {
         console.error('[Role-Update] 🔥 Critical error:', err);
-        res.status(500).json({ error: 'Internal server error during role update' });
+        res.status(500).json({ error: 'Internal server error during role update', details: err.message });
     }
 });
 

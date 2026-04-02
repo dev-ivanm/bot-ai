@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 
 // Endpoint de salud para verificar si el backend está vivo y actualizado
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date(), version: '1.0.3', sync: 'STAMP_VERIFY_NEW' });
+    res.json({ status: 'ok', timestamp: new Date(), version: '1.0.4', sync: 'STAMP_DEPLOY_VERIFY_V2' });
 });
 
 // Inyectar io en el request para que las rutas lo usen
