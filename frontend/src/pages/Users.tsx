@@ -178,11 +178,10 @@ const Users = () => {
   const [nuevoAgenteRol, setNuevoAgenteRol] = useState("agente");
   const [creandoAgente, setCreandoAgente] = useState(false);
 
-  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001/api/whatsapp";
 
-  const baseApi = API_URL.includes('/chat/findChat') 
-    ? API_URL.split('/chat/findChat')[0] 
-    : API_URL;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+  const baseApi = `${BACKEND_URL}/api/whatsapp`;
+
 
   const fetchProfiles = useCallback(async () => {
     if (!currentUserProfile) return;
