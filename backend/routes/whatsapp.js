@@ -888,6 +888,68 @@ router.delete('/admin/delete-user/:id', async (req, res) => {
     }
 });
 
+// PUT /api/whatsapp/admin/update-role/:id
+// Permite al super-admin cambiar el rol y is_owner de un usuario
+router.put('/admin/update-role/:id', async (req, res) => {
+    const { id } = req.params;
+    const { role, is_owner, callerUserId } = req.body;
+
+    if (!id || !callerUserId) {
+        return res.status(400).json({ error: 'ID de usuario y callerUserId son requeridos' });
+    }
+
+    try {
+        // 1. Verificar que el caller es super-admin
+        const { data: caller } = await supabase
+            .from('perfiles_usuario')
+            .select('role')
+            .eq('id', callerUserId)
+            .single();
+
+        if (caller?.role !== 'super-admin') {
+            return res.status(403).json({ error: 'Solo el super-admin puede cambiar roles' });
+        }
+
+        // 2. No puede cambiar su propio rol (protección contra auto-degradación)
+        if (id === callerUserId) {
+            return res.status(403).json({ error: 'No puedes cambiar tu propio rol' });
+        }
+
+        // 3. Construir objeto de actualización
+        const updateData = {};
+        if (role !== undefined) updateData.role = role;
+        if (is_owner !== undefined) updateData.is_owner = is_owner;
+
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: 'Debes enviar al menos role o is_owner' });
+        }
+
+        // 4. Actualizar en perfiles_usuario
+        const { error: profileError } = await supabase
+            .from('perfiles_usuario')
+            .update(updateData)
+            .eq('id', id);
+
+        if (profileError) throw profileError;
+
+        // 5. Sincronizar con Auth metadata
+        const { error: authError } = await supabase.auth.admin.updateUserById(id, {
+            user_metadata: updateData
+        });
+
+        if (authError) {
+            console.error('[Backend] Error syncing auth metadata:', authError);
+            // No bloqueamos: el perfil ya se actualizó
+        }
+
+        console.log(`[Backend] Rol actualizado para ${id}:`, updateData);
+        res.json({ success: true, updated: updateData });
+    } catch (err) {
+        console.error('[Backend] Error updating role:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // GET /api/whatsapp/admin/leads
 // Lista los leads con sus puntajes de la empresa del usuario
 router.get('/admin/leads', async (req, res) => {
