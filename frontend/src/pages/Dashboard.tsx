@@ -73,7 +73,7 @@ interface Message {
 }
 
 const Dashboard = () => {
-  const { session, profileLoading, hasSeenTutorial, refreshProfile } = useAuth();
+  const { session, profileLoading, hasSeenTutorial, completeTutorial } = useAuth();
   const [perfil, setPerfil] = useState<PerfilBot | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +93,7 @@ const Dashboard = () => {
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showCerebroModal, setShowCerebroModal] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
+  const tutorialStarted = useRef(false);
 
   // Ref para auto-scroll al final del chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -674,7 +675,8 @@ socketRef.current = socket;
 
   // Lógica del Tutorial Guiado (Onboarding)
   useEffect(() => {
-    if (!profileLoading && !hasSeenTutorial && status !== "Verificando sesión...") {
+    if (!profileLoading && !hasSeenTutorial && status !== "Verificando sesión..." && !tutorialStarted.current) {
+      tutorialStarted.current = true;
       const driverObj = driver({
         showProgress: true,
         animate: true,
@@ -738,18 +740,8 @@ socketRef.current = socket;
           },
         ],
         onDestroyed: async () => {
-          // Marcar tutorial como completado en el backend
-          try {
-            await fetch(`${BACKEND_URL}/api/whatsapp/profile/complete-tutorial`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: session?.user.id })
-            });
-            // Refrescar perfil para que hasSeenTutorial sea true
-            void refreshProfile();
-          } catch (err) {
-            console.error("Error al finalizar tutorial:", err);
-          }
+          // Marcar tutorial como completado globalmente
+          void completeTutorial();
         }
       });
 

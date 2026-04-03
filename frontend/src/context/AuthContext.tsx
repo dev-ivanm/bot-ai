@@ -51,6 +51,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [session, BACKEND_URL]);
 
+  const completeTutorial = async () => {
+    if (!session?.user.id) return;
+    
+    // Optimistic update: marcar como visto localmente de inmediato
+    setHasSeenTutorial(true);
+
+    try {
+      await fetch(`${BACKEND_URL}/api/whatsapp/profile/complete-tutorial`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: session.user.id }),
+      });
+      // Sincronizar con el servidor
+      void refreshProfile();
+    } catch (err: unknown) {
+      console.error("Error completando el tutorial:", err);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -106,7 +125,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       limits,
       profileLoading, 
       hasSeenTutorial,
-      refreshProfile 
+      refreshProfile,
+      completeTutorial 
     }}>
       {children}
     </AuthContext.Provider>

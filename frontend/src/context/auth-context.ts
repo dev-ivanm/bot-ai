@@ -17,6 +17,7 @@ export interface AuthContextType {
   profileLoading: boolean;
   hasSeenTutorial: boolean;
   refreshProfile: () => Promise<void>;
+  completeTutorial: () => Promise<void>;
 }
 
 export interface ProfileResponse {
@@ -51,6 +52,7 @@ export const AuthContext = createContext<AuthContextType>({
   profileLoading: true,
   hasSeenTutorial: true, // Default to true to avoid showing it before profile is loaded
   refreshProfile: async () => {},
+  completeTutorial: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
