@@ -39,7 +39,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsTrial(!!data.empresa?.is_trial);
         setIsPlanExpired(!!data.isPlanExpired);
         setVencimientoPlan(data.empresa?.vencimiento_plan || null);
-        setHasSeenTutorial(!!data.profile?.has_seen_tutorial);
+        
+        // Estrategia de Persistencia Doble (DB + LocalStorage)
+        const localTutorialSeen = localStorage.getItem('bot_ai_tutorial_seen') === 'true';
+        const serverTutorialSeen = !!data.profile?.has_seen_tutorial;
+        
+        setHasSeenTutorial(localTutorialSeen || serverTutorialSeen);
+        
         setLimits({
           agentes: (data.isPlanExpired || data.empresa?.plan === 'gratis') ? 1 : (data.empresa?.limite_agentes || 1)
         });
@@ -56,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     // Optimistic update: marcar como visto localmente de inmediato
     setHasSeenTutorial(true);
+    localStorage.setItem('bot_ai_tutorial_seen', 'true');
 
     try {
       await fetch(`${BACKEND_URL}/api/whatsapp/profile/complete-tutorial`, {
