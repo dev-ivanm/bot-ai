@@ -1457,65 +1457,37 @@ router.get('/upgrade/my-request', async (req, res) => {
 });
 
 
-// Configuración de la API de Gmail v1 (OAuth2 vía HTTPS)
-const { google } = require('googleapis');
-
-const oauth2Client = new google.auth.OAuth2(
-    process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
-);
-
-oauth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN
-});
-
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
-// Configuración de Nodemailer (SMTP) - para emails directos en otras rutas
+// Configuración de Nodemailer (SMTP + IPv4 forzado para Railway)
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '465'),
+    host: 'smtp.gmail.com',
+    port: 465,
     secure: true,
+    family: 4, // Forzar IPv4 (Railway bloquea IPv6)
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
     }
 });
 
-// Función auxiliar para enviar correos vía Gmail API (OAuth2)
+// Función auxiliar para enviar correos vía SMTP
 async function sendEmail({ to, subject, html, text }) {
     try {
-        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-        const messageParts = [
-            `From: "Bot AI" <${process.env.GMAIL_USER || process.env.SMTP_USER}>`,
-            `To: ${to}`,
-            'Content-Type: text/html; charset=utf-8',
-            'MIME-Version: 1.0',
-            `Subject: ${utf8Subject}`,
-            '',
-            html || text || '',
-        ];
-        const message = messageParts.join('\n');
-        const encodedMessage = Buffer.from(message)
-            .toString('base64')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-        const res = await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: { raw: encodedMessage },
+        const info = await transporter.sendMail({
+            from: process.env.SMTP_FROM || `"Bot AI" <${process.env.SMTP_USER}>`,
+            to,
+            subject,
+            html,
+            text
         });
-        console.log('[Gmail API] Email enviado con éxito:', res.data.id);
-        return res.data;
+        console.log('[Email] Enviado con éxito:', info.messageId);
+        return info;
     } catch (error) {
-        console.error('[Gmail API] Error enviando correo:', error);
+        console.error('[Email] Error enviando correo:', error);
         throw error;
     }
 }
 
-console.log('[Gmail API] Cliente OAuth2 configurado correctamente');
+console.log('[Email] SMTP configurado correctamente (IPv4, puerto 465)');
 
 
 // POST /api/whatsapp/auth/register
