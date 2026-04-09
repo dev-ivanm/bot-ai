@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const nodemailer = require('nodemailer');
 const supabase = require('../services/supabase');
 require('dotenv').config();
 const multer = require('multer');
@@ -1239,16 +1240,14 @@ router.post('/upgrade/request', async (req, res) => {
             const planNombre = planSolicitado.toUpperCase();
 
             // 1. Email al Super-Admin
-            await transporter.sendMail({
-                from: process.env.SMTP_FROM,
+            await sendEmail({
                 to: process.env.SMTP_USER,
                 subject: `🚀 Nueva Solicitud de Upgrade - ${profile.email}`,
                 text: `Hola Super-Admin,\n\nSe ha recibido una nueva solicitud de upgrade:\n- Empresa ID: ${profile.empresa_id}\n- Usuario: ${profile.email}\n- Plan Solicitado: ${planNombre}\n- Notas: ${notas || 'Ninguna'}\n\nPuedes gestionar esta solicitud en el panel de administración.`
             });
 
             // 2. Email al Usuario con instrucciones de pago
-            await transporter.sendMail({
-                from: process.env.SMTP_FROM,
+            await sendEmail({
                 to: profile.email,
                 subject: `📌 Instrucciones para tu Upgrade - Bot AI`,
                 html: `
@@ -1396,8 +1395,7 @@ router.put('/upgrade/requests/:id', async (req, res) => {
         if (accion === 'rechazar') {
             try {
                 // El email_solicitante ya viene en el objeto 'solicitud' que cargamos antes
-                await transporter.sendMail({
-                    from: process.env.SMTP_FROM || `"Bot AI" <${process.env.SMTP_USER}>`,
+                await sendEmail({
                     to: solicitud.email_solicitante,
                     subject: `Actualización de tu solicitud de Upgrade - Bot AI`,
                     html: `
@@ -1459,60 +1457,36 @@ router.get('/upgrade/my-request', async (req, res) => {
 });
 
 
-// =============================================
-// PERFIL Y VERIFICACIÓN OTP
-// =============================================
-
-const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
-
-// Configuración de la API de Gmail v1 (HTTPS - Sin bloqueos de puertos)
-const oauth2Client = new google.auth.OAuth2(
-    process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
-);
-
-oauth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN
+// Configuración de Nodemailer (SMTP)
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: process.env.SMTP_PORT === '465', // true para puerto 465, false para otros
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
 });
 
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
-// Función auxiliar para enviar correos vía Gmail API (HTTPS)
-async function sendGmail({ to, subject, html }) {
+// Función auxiliar para enviar correos vía SMTP
+async function sendEmail({ to, subject, html, text }) {
     try {
-        const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-        const messageParts = [
-            `From: "Bot AI" <${process.env.GMAIL_USER}>`,
-            `To: ${to}`,
-            'Content-Type: text/html; charset=utf-8',
-            'MIME-Version: 1.0',
-            `Subject: ${utf8Subject}`,
-            '',
+        const info = await transporter.sendMail({
+            from: process.env.SMTP_FROM || `"Bot AI" <${process.env.SMTP_USER}>`,
+            to,
+            subject,
             html,
-        ];
-        const message = messageParts.join('\n');
-        const encodedMessage = Buffer.from(message)
-            .toString('base64')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-        const res = await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-                raw: encodedMessage,
-            },
+            text
         });
-        return res.data;
+        console.log('[Email] Enviado con éxito:', info.messageId);
+        return info;
     } catch (error) {
-        console.error('[Gmail API] Error enviando correo:', error);
+        console.error('[Email] Error enviando correo:', error);
         throw error;
     }
 }
 
-console.log('[Gmail API] Cliente HTTPS configurado correctamente');
+console.log('[Email] Sistema de correo (SMTP) configurado correctamente');
 
 
 // POST /api/whatsapp/auth/register
@@ -1623,8 +1597,8 @@ router.post('/auth/forgot-password', async (req, res) => {
 
         const recoveryLink = data.properties.action_link;
 
-        // 2. Enviar email con Gmail API (HTTPS)
-        const emailResult = await sendGmail({
+        // 2. Enviar email con SMTP
+        const emailResult = await sendEmail({
             to: email,
             subject: 'Recupera tu contraseña - Bot AI',
             html: `
@@ -1645,7 +1619,7 @@ router.post('/auth/forgot-password', async (req, res) => {
             `
         });
 
-        console.log('[Forgot-Password] Email enviado con éxito via Gmail API (HTTPS):', emailResult.id);
+        console.log('[Forgot-Password] Email enviado con éxito via SMTP:', emailResult.messageId);
         res.json({ success: true, message: 'Email de recuperación enviado' });
 
     } catch (err) {
@@ -1690,8 +1664,8 @@ router.post('/otp/send', async (req, res) => {
 
         console.log(`[OTP] Enviando código a ${user.email} (UserId: ${userId})`);
 
-        // Enviar email con Gmail API (HTTPS)
-        const emailResult = await sendGmail({
+        // Enviar email con SMTP
+        const emailResult = await sendEmail({
             to: user.email,
             subject: 'Tu código de verificación - Bot AI',
             html: `
@@ -1710,7 +1684,7 @@ router.post('/otp/send', async (req, res) => {
             `
         });
 
-        console.log('[OTP] Email enviado con éxito via Gmail API (HTTPS):', emailResult.id);
+        console.log('[OTP] Email enviado con éxito via SMTP:', emailResult.messageId);
         res.json({ success: true, message: 'OTP enviado' });
     } catch (err) {
         console.error('[OTP] Error sending:', err);
@@ -1856,8 +1830,7 @@ async function checkExpiringPlans() {
             for (const empresa of expiringStandard) {
                 const { data: owner } = await supabase.from('perfiles_usuario').select('email').eq('empresa_id', empresa.id).eq('is_owner', true).maybeSingle();
                 if (owner?.email) {
-                    await transporter.sendMail({
-                        from: process.env.SMTP_FROM,
+                    await sendEmail({
                         to: owner.email,
                         subject: `⚠️ Aviso: Tu plan en Bot AI vence en 3 días`,
                         html: `<h2>Tu plan ${empresa.plan.toUpperCase()} está por vencer</h2><p>Realiza tu pago para evitar interrupciones...</p>`
@@ -1881,8 +1854,7 @@ async function checkExpiringPlans() {
             for (const empresa of expiringTrial) {
                 const { data: owner } = await supabase.from('perfiles_usuario').select('email').eq('empresa_id', empresa.id).eq('is_owner', true).maybeSingle();
                 if (owner?.email) {
-                    await transporter.sendMail({
-                        from: process.env.SMTP_FROM,
+                    await sendEmail({
                         to: owner.email,
                         subject: `🚀 Tu prueba PRO de Bot AI está por vencer`,
                         html: `

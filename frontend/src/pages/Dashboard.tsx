@@ -114,25 +114,25 @@ const Dashboard = () => {
     async (name?: string) => {
       // Intentamos sacar el name del argumento, si no existe o es vacío, lo calculamos
       const currentInstanceName = name || perfil?.instance_name || (session?.user.id ? `bot-${session.user.id.substring(0, 5)}` : null);
-      
+
       if (!currentInstanceName || currentInstanceName === 'bot-undefined') {
         console.log("cargarChats: No instance name available yet");
         return;
       }
-      
+
       try {
         console.log("cargarChats: Fetching for", currentInstanceName);
         const res = await fetch(`${API_URL}/chat/findChat/${currentInstanceName}`, {
-            method: 'POST'
+          method: 'POST'
         });
-        
+
         if (!res.ok) throw new Error("Server error");
-        
+
         const data = await res.json() as Chat[] | { chats?: Chat[]; data?: Chat[] };
         const newChats = Array.isArray(data) ? data : (data.chats || data.data || []);
-        
+
         console.log("CHATS SYNC:", newChats.length, "chats found");
-        
+
         setChats(prevChats => {
           // Si recibimos chats, los actualizamos
           if (newChats.length > 0) return newChats;
@@ -146,7 +146,7 @@ const Dashboard = () => {
         console.error("Error cargando chats:", err);
       }
     },
-    [API_URL, perfil?.instance_name, session?.user.id], 
+    [API_URL, perfil?.instance_name, session?.user.id],
   );
 
   const fetchQR = useCallback(
@@ -229,11 +229,11 @@ const Dashboard = () => {
         // pero Evolution API no siempre dispara el upsert del 'fromMe' inmediatamente.
         // Lo agregamos para feedback instantáneo.
         const msgPropio: Message = {
-           id: 'sent-' + Date.now(),
-           fromMe: true,
-           sender: 'Tú',
-           text: inputMensaje.trim(),
-           timestamp: new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+          id: 'sent-' + Date.now(),
+          fromMe: true,
+          sender: 'Tú',
+          text: inputMensaje.trim(),
+          timestamp: new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
         };
         setMensajes(prev => [...prev, msgPropio]);
         scrollToBottom();
@@ -301,7 +301,7 @@ const Dashboard = () => {
 
   // const manejarDesconexion = async () => {
   //   if (!perfil?.instance_name) return;
-    
+
   //   const confirm = window.confirm("¿Estás seguro que deseas desconectar WhatsApp? Tendrás que volver a escanear el QR.");
   //   if (!confirm) return;
 
@@ -310,7 +310,7 @@ const Dashboard = () => {
   //     const res = await fetch(`${API_URL}/instance/logout/${perfil.instance_name}`, {
   //       method: 'DELETE'
   //     });
-      
+
   //     if (res.ok) {
   //       setStatus("Desconectado");
   //       setQr(null);
@@ -318,7 +318,7 @@ const Dashboard = () => {
   //       await fetch(`${API_URL}/instance/delete/${perfil.instance_name}`, {
   //         method: 'DELETE'
   //       });
-        
+
   //       // Refrescar para limpiar todo
   //       window.location.reload();
   //     } else {
@@ -335,11 +335,11 @@ const Dashboard = () => {
     if (!session?.user.id) return;
     const instanceName =
       perfil?.instance_name || `bot-${session?.user.id.substring(0, 5)}`;
-    
+
     try {
       // Simplificamos la URL para evitar errores de path
-      const baseApi = API_URL.includes('/chat/findChat') 
-        ? API_URL.split('/chat/findChat')[0] 
+      const baseApi = API_URL.includes('/chat/findChat')
+        ? API_URL.split('/chat/findChat')[0]
         : API_URL;
 
       const res = await fetch(`${baseApi}/profile`, {
@@ -370,8 +370,8 @@ const Dashboard = () => {
     if (!session?.user.id) return;
     setCargandoMemoria(true);
     try {
-      const baseApi = API_URL.includes('/chat/findChat') 
-        ? API_URL.split('/chat/findChat')[0] 
+      const baseApi = API_URL.includes('/chat/findChat')
+        ? API_URL.split('/chat/findChat')[0]
         : API_URL;
       const res = await fetch(`${baseApi}/memory?userId=${session.user.id}`);
       if (res.ok) {
@@ -390,15 +390,15 @@ const Dashboard = () => {
     if (!nuevoConocimiento.trim() || guardandoMemoria) return;
     setGuardandoMemoria(true);
     try {
-      const baseApi = API_URL.includes('/chat/findChat') 
-        ? API_URL.split('/chat/findChat')[0] 
+      const baseApi = API_URL.includes('/chat/findChat')
+        ? API_URL.split('/chat/findChat')[0]
         : API_URL;
       const res = await fetch(`${baseApi}/memory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          contenido: nuevoConocimiento.trim(), 
-          userId: session?.user.id 
+        body: JSON.stringify({
+          contenido: nuevoConocimiento.trim(),
+          userId: session?.user.id
         }),
       });
       if (res.ok) {
@@ -429,8 +429,8 @@ const Dashboard = () => {
             onClick={async () => {
               toast.dismiss(t.id);
               try {
-                const baseApi = API_URL.includes('/chat/findChat') 
-                  ? API_URL.split('/chat/findChat')[0] 
+                const baseApi = API_URL.includes('/chat/findChat')
+                  ? API_URL.split('/chat/findChat')[0]
                   : API_URL;
                 const res = await fetch(`${baseApi}/memory/${id}?userId=${session?.user.id}`, { method: "DELETE" });
                 if (res.ok) {
@@ -495,7 +495,7 @@ const Dashboard = () => {
             setStatus("Conectado ✅");
             setQr(null);
             cargarChats(instanceName);
-            
+
             // Asegurar que el webhook esté configurado correctamente con la URL del backend
             void fetch(`${API_URL}/instance/setup-webhook/${instanceName}`, { method: 'POST' });
 
@@ -508,9 +508,9 @@ const Dashboard = () => {
                 prompt_sistema: "",
               };
               const resSave = await fetch(`${API_URL.replace('/chat/findChat', '')}/profile`, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify(newPerfil)
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPerfil)
               });
               const savedData = (await resSave.json()) as PerfilBot;
               setPerfil(savedData);
@@ -577,7 +577,7 @@ const Dashboard = () => {
   // Ref para el socket y para el chat seleccionado
   const socketRef = useRef<Socket | null>(null);
   const chatRef = useRef(chatSeleccionado);
-  
+
   useEffect(() => {
     chatRef.current = chatSeleccionado;
   }, [chatSeleccionado]);
@@ -587,9 +587,9 @@ const Dashboard = () => {
     if (!session || socketRef.current) return;
 
     const socket = io(API_URL.replace('/api/whatsapp', ''), {
-       transports: ['websocket'],
-       reconnection: true,
-       reconnectionAttempts: 5
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5
     });
 
     socket.on('connect', () => {
@@ -597,14 +597,14 @@ const Dashboard = () => {
     });
 
     socket.on('presence_update', (payload: PresencePayload) => {
-       const remoteJid = payload.data.id;
-       const presence = payload.data.presences[Object.keys(payload.data.presences)[0]]?.lastKnownPresence;
-       
-       if (presence === 'composing') {
-         setTypingChatId(remoteJid);
-       } else {
-         setTypingChatId(null);
-       }
+      const remoteJid = payload.data.id;
+      const presence = payload.data.presences[Object.keys(payload.data.presences)[0]]?.lastKnownPresence;
+
+      if (presence === 'composing') {
+        setTypingChatId(remoteJid);
+      } else {
+        setTypingChatId(null);
+      }
     });
 
     socket.on('chats_update', () => {
@@ -615,7 +615,7 @@ const Dashboard = () => {
       console.log('[Socket] Chat(s) eliminado(s):', payload);
       const deletedIds = payload.data;
       setChats(prev => prev.filter(c => !deletedIds.includes(c.id)));
-      
+
       const currentChat = chatRef.current;
       if (currentChat && deletedIds.includes(currentChat.id)) {
         setChatSeleccionado(null);
@@ -632,14 +632,14 @@ const Dashboard = () => {
 
     socket.on('new_message', (payload: NewMessagePayload) => {
       console.log('[Socket] Mensaje recibido:', payload);
-      
+
       // Siempre refrescar la lista de chats para mover al tope y actualizar preview
       void cargarChats();
-      
+
       const currentChat = chatRef.current;
-      
+
       if (
-        currentChat && 
+        currentChat &&
         payload.message.remoteJid === currentChat.id &&
         (perfil?.instance_name === payload.instance || payload.instance.startsWith('bot-'))
       ) {
@@ -649,7 +649,7 @@ const Dashboard = () => {
         });
         scrollToBottom();
       }
-      
+
       // Actualizamos manualmente el previo del chat en la lista para que sea instantáneo
       setChats(prev => prev.map(c => {
         if (c.id === payload.message.remoteJid) {
@@ -665,7 +665,7 @@ const Dashboard = () => {
       }));
     });
 
-socketRef.current = socket;
+    socketRef.current = socket;
 
     return () => {
       socket.disconnect();
@@ -685,58 +685,58 @@ socketRef.current = socket;
         prevBtnText: "Anterior",
         doneBtnText: "Finalizar",
         steps: [
-          { 
-            element: "#tour-welcome", 
-            popover: { 
-              title: "¡Bienvenido a Bot-AI! 🚀", 
+          {
+            element: "#tour-welcome",
+            popover: {
+              title: "¡Bienvenido a Bot-AI! 🚀",
               description: "Te ayudaremos a configurar tu asistente de WhatsApp en unos pocos pasos.",
               side: "bottom",
               align: "center"
-            } 
+            }
           },
-          { 
-            element: "#tour-status", 
-            popover: { 
-              title: "Estado de Conexión", 
+          {
+            element: "#tour-status",
+            popover: {
+              title: "Estado de Conexión",
               description: "Aquí puedes ver si tu WhatsApp está conectado o si necesitas vincularlo.",
               side: "bottom",
               align: "center"
-            } 
+            }
           },
-          { 
-            element: "#tour-qr-section", 
-            popover: { 
-              title: "Vincular WhatsApp", 
+          {
+            element: "#tour-qr-section",
+            popover: {
+              title: "Vincular WhatsApp",
               description: "Para comenzar, haz clic en 'Vincular' y escanea el código QR desde tu teléfono (Ajustes > Dispositivos vinculados).",
               side: "left",
               align: "start"
-            } 
+            }
           },
-          { 
-            element: "#tour-prompt", 
-            popover: { 
-              title: "Personalidad de la IA", 
+          {
+            element: "#tour-prompt",
+            popover: {
+              title: "Personalidad de la IA",
               description: "Aquí puedes definir cómo quieres que responda tu bot (formal, divertido, vendedor, etc).",
               side: "bottom",
               align: "center"
-            } 
+            }
           },
-          { 
-            element: "#tour-cerebro", 
-            popover: { 
-              title: "El Cerebro del Bot", 
+          {
+            element: "#tour-cerebro",
+            popover: {
+              title: "El Cerebro del Bot",
               description: "¡Esta es la parte más importante! Aquí añades la información de tu negocio para que la IA sepa qué responder.",
               side: "bottom",
               align: "center"
-            } 
+            }
           },
-          { 
-            popover: { 
-              title: "¡Todo listo!", 
+          {
+            popover: {
+              title: "¡Todo listo!",
               description: "Ya puedes empezar a automatizar tus ventas por WhatsApp. ¡Suerte!",
               side: "bottom",
               align: "center"
-            } 
+            }
           },
         ],
         onDestroyed: async () => {
@@ -766,7 +766,7 @@ socketRef.current = socket;
                   qr ? "animate-pulse text-yellow-500" : "text-[#00a884]"
                 }
               />
-            <span id="tour-status">WhatsApp AI - {status}</span>
+              <span id="tour-status">WhatsApp AI - {status}</span>
             </h1>
           </div>
           <button
@@ -778,9 +778,8 @@ socketRef.current = socket;
         </header>
 
         <main className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
-          <section className={`w-full lg:w-[300px] flex-shrink-0 border-r border-[#2a3942] flex flex-col bg-[#111b21] min-h-0 ${
-            showMobileChat ? "hidden lg:flex" : "flex"
-          }`}>
+          <section className={`w-full lg:w-[300px] flex-shrink-0 border-r border-[#2a3942] flex flex-col bg-[#111b21] min-h-0 ${showMobileChat ? "hidden lg:flex" : "flex"
+            }`}>
             <div className="p-4 flex flex-col gap-3 bg-[#202c33] border-b border-[#2a3942]">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -860,14 +859,13 @@ socketRef.current = socket;
             </div>
           </section>
 
-          <section className={`flex-1 flex flex-col bg-[#0b141a] relative min-h-0 border-r border-[#2a3942] ${
-            !showMobileChat ? "hidden lg:flex" : "flex"
-          }`}>
+          <section className={`flex-1 flex flex-col bg-[#0b141a] relative min-h-0 border-r border-[#2a3942] ${!showMobileChat ? "hidden lg:flex" : "flex"
+            }`}>
             {chatSeleccionado ? (
               <>
                 <div className="p-4 bg-[#202c33] border-b border-[#2a3942] flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                    <button 
+                    <button
                       onClick={() => setShowMobileChat(false)}
                       className="lg:hidden p-1 -ml-1 text-[#8696a0] hover:text-[#e9edef]"
                     >
@@ -893,11 +891,10 @@ socketRef.current = socket;
                       {mensajes.map((msg) => (
                         <div
                           key={msg.id}
-                          className={`max-w-[70%] p-3 rounded-lg text-sm shadow-sm transition-all ${
-                            msg.fromMe
+                          className={`max-w-[70%] p-3 rounded-lg text-sm shadow-sm transition-all ${msg.fromMe
                               ? "self-end bg-[#005c4b] rounded-br-none border-l-2 border-[#00a884] text-white"
                               : "self-start bg-[#202c33] rounded-bl-none border-r-2 border-[#8696a0] text-white"
-                          }`}
+                            }`}
                         >
                           <p className="break-words whitespace-pre-wrap">{msg.text}</p>
                           <p className="text-[10px] text-[#8696a0] text-right mt-1 opacity-70">
@@ -925,7 +922,7 @@ socketRef.current = socket;
                     }}
                     disabled={enviando}
                   />
-                  <button 
+                  <button
                     onClick={() => { void handleEnviar(); }}
                     disabled={enviando || !inputMensaje.trim()}
                     className="text-[#00a884] p-2 hover:bg-[#2a3942] rounded-full disabled:opacity-30 transition-all"
@@ -948,17 +945,17 @@ socketRef.current = socket;
                 </p>
                 {!qr && !status.includes("✅") && (
                   <div className="mt-4 flex flex-col items-center gap-2">
-                      <p className="text-[#8696a0] text-sm mb-6 max-w-md text-center">
-                        Para comenzar a usar la IA, necesitas vincular tu cuenta de WhatsApp.
-                      </p>
-                      <button
-                        id="tour-qr-section"
-                        onClick={manejarConexionTotal}
-                        className="bg-[#00a884] text-[#111b21] px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-[#06cf9c] transition-colors shadow-lg"
-                      >
-                        <QrCode size={20} />
-                        Vincular WhatsApp
-                      </button>
+                    <p className="text-[#8696a0] text-sm mb-6 max-w-md text-center">
+                      Para comenzar a usar la IA, necesitas vincular tu cuenta de WhatsApp.
+                    </p>
+                    <button
+                      id="tour-qr-section"
+                      onClick={manejarConexionTotal}
+                      className="bg-[#00a884] text-[#111b21] px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-[#06cf9c] transition-colors shadow-lg"
+                    >
+                      <QrCode size={20} />
+                      Vincular WhatsApp
+                    </button>
                   </div>
                 )}
               </div>
@@ -970,7 +967,7 @@ socketRef.current = socket;
       {showPromptModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-[#202c33] p-6 rounded-xl border border-[#2a3942] w-full max-w-4xl relative animate-in fade-in zoom-in duration-200">
-            <button 
+            <button
               onClick={() => setShowPromptModal(false)}
               className="absolute top-4 right-4 text-[#8696a0] hover:text-white transition-colors"
             >
@@ -1007,7 +1004,7 @@ socketRef.current = socket;
       {showCerebroModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-[#202c33] p-6 rounded-xl border border-[#2a3942] w-full max-w-2xl flex flex-col max-h-[90vh] relative animate-in fade-in zoom-in duration-200">
-            <button 
+            <button
               onClick={() => setShowCerebroModal(false)}
               className="absolute top-4 right-4 text-[#8696a0] hover:text-white transition-colors"
             >
@@ -1036,7 +1033,7 @@ socketRef.current = socket;
                   onChange={(e) => setNuevoConocimiento(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && void agregarMemoria()}
                 />
-                <button 
+                <button
                   onClick={() => void agregarMemoria()}
                   disabled={guardandoMemoria || !nuevoConocimiento.trim()}
                   className="bg-[#00a884] text-[#111b21] px-4 rounded-lg disabled:opacity-30 font-bold transition-opacity"
@@ -1058,7 +1055,7 @@ socketRef.current = socket;
                 memoria.map((item) => (
                   <div key={item.id} className="bg-[#0b141a] p-4 rounded-lg border border-[#2a3942] group relative">
                     <p className="text-sm text-[#e9edef] pr-8 leading-normal">{item.contenido}</p>
-                    <button 
+                    <button
                       onClick={() => void borrarMemoria(item.id)}
                       className="absolute top-4 right-4 text-[#ea4335] opacity-0 group-hover:opacity-100 transition-opacity bg-[#2a3942] p-1.5 rounded-md hover:bg-red-500/20"
                     >
