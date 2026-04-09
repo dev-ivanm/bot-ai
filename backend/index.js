@@ -1,8 +1,13 @@
+// Forzar IPv4 en todas las resoluciones DNS (Railway bloquea IPv6 en conexiones salientes)
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
+
 
 const app = express();
 const server = http.createServer(app);
