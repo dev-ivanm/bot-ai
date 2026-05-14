@@ -278,19 +278,16 @@ const Dashboard = () => {
       await new Promise((resolve) => setTimeout(resolve, 5000));
       await fetchQR(instanceName);
 
-      // Configurar Webhook Global hacia Supabase como solicitó el usuario
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      if (SUPABASE_URL) {
-        void fetch(`${API_URL}/webhook/set/${instanceName}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: `${SUPABASE_URL}/functions/v1/whatsapp-webhook`,
-            enabled: true,
-            events: ["MESSAGES_UPSERT", "CONTACTS_UPSERT"]
-          })
-        });
-      }
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      void fetch(`${API_URL}/webhook/set/${instanceName}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: `${BACKEND_URL}/api/webhook/evolution`, // <--- Ahora apunta a tu backend local
+          enabled: true,
+          events: ["MESSAGES_UPSERT", "CONTACTS_UPSERT", "CONNECTION_UPDATE", "CHATS_SET", "CHATS_UPDATE", "CHATS_UPSERT", "MESSAGES_SET", "MESSAGES_UPDATE", "QRCODE_UPDATED", "SEND_MESSAGE"]
+        })
+      });
 
       // Mantener también la configuración del backend local por si acaso para Socket.io
       void fetch(`${API_URL}/instance/setup-webhook/${instanceName}`, { method: 'POST' });
@@ -892,8 +889,8 @@ const Dashboard = () => {
                         <div
                           key={msg.id}
                           className={`max-w-[70%] p-3 rounded-lg text-sm shadow-sm transition-all ${msg.fromMe
-                              ? "self-end bg-[#005c4b] rounded-br-none border-l-2 border-[#00a884] text-white"
-                              : "self-start bg-[#202c33] rounded-bl-none border-r-2 border-[#8696a0] text-white"
+                            ? "self-end bg-[#005c4b] rounded-br-none border-l-2 border-[#00a884] text-white"
+                            : "self-start bg-[#202c33] rounded-bl-none border-r-2 border-[#8696a0] text-white"
                             }`}
                         >
                           <p className="break-words whitespace-pre-wrap">{msg.text}</p>
