@@ -13,7 +13,7 @@ services:
     networks:
       - evolution_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
     networks:
       - evolution_net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,7 +62,7 @@ services:
       DATABASE_PROVIDER: postgresql
       DATABASE_CONNECTION_URI: "postgresql://postgres:postgres@evolution_database:5432/evolution_api?sslmode=disable"
       DATABASE_CONNECTION_CLIENT_NAME: "evolution_db"
-      
+
       # --- Persistencia (Ajustado) ---
       DATABASE_SAVE_DATA_INSTANCE: "true"
       DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
@@ -70,7 +70,7 @@ services:
       DATABASE_SAVE_DATA_CHATS: "true"
       DATABASE_SAVE_DATA_LABELS: "true"
       DATABASE_SAVE_MESSAGE_FILES: "true"
-      
+
       # --- Sincronización (Ajustado) ---
       QRCODE_LIMIT: 30
       CLEAN_STORE_CLEAN_CHAT: "false"
@@ -93,13 +93,13 @@ services:
       WEBSOCKET_ALLOWED_ORIGINS: "*"
       SOCKETIO_CORS_ORIGIN: "*"
       CORS_ALLOW_CREDENTIALS: "true"
-      
+
       # --- Webhooks ---
       WEBHOOK_GLOBAL_ENABLED: "true"
       WEBHOOK_GLOBAL_URL: http://evolution_backend:3001/api/webhook/evolution
       # WEBHOOK_GLOBAL_URL: http://host.docker.internal:3001/api/webhook/evolution # Local
       WEBHOOK_EVENTS: MESSAGES_UPSERT,MESSAGES_UPDATE,CONNECTION_UPDATE,QRCODE_UPDATED,CHATS_SET,CHATS_UPDATE,CHATS_UPSERT,MESSAGES_SET,MESSAGES_UPDATE,SEND_MESSAGE
-      
+
       CONFIG_SESSION_PHONE_CLIENT: Chrome
       CONFIG_SESSION_PHONE_NAME: Windows
       WA_VERSION: "2.3000.1015901307"
@@ -119,7 +119,8 @@ services:
     networks:
       - evolution_net
     ports:
-      - "3000:3000"
+      # - "3000:3000"
+      - "3001:3001"
     depends_on:
       - evolution_api
     env_file:
