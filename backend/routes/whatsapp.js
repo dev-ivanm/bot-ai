@@ -1615,13 +1615,13 @@ router.post('/auth/forgot-password', async (req, res) => {
     try {
         // 1. Generar link de recuperación mediante Supabase Admin
         // Esto NO envía un correo automáticamente, solo genera el link
+        const redirectTo = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/reset-password`;
+        console.log(`[Forgot-Password] Generando link de recuperación. RedirectTo: ${redirectTo}`);
+
         const { data, error } = await supabase.auth.admin.generateLink({
             type: 'recovery',
             email: email,
-            options: { 
-                // Normalizamos la URL para evitar dobles slashes si la variable ya trae uno
-                redirectTo: `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/reset-password` 
-            }
+            options: { redirectTo }
         });
 
         if (error) {
