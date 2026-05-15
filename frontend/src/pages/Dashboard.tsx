@@ -109,9 +109,18 @@ const Dashboard = () => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
   const API_URL = `${BACKEND_URL}/api/whatsapp`;
 
+  const lastCargarChatsRef = useRef<number>(0);
+
   // Usamos useCallback para poder llamarlo dentro de useEffect sin warnings
   const cargarChats = useCallback(
-    async (name?: string) => {
+    async (name?: string, force = false) => {
+      // Evitar recargas demasiado frecuentes (ej. cada 10 segundos maximo) a menos que sea forzado
+      const now = Date.now();
+      if (!force && now - lastCargarChatsRef.current < 10000) {
+        console.log("cargarChats: Throttled, skipping...");
+        return;
+      }
+      lastCargarChatsRef.current = now;
       // Intentamos sacar el name del argumento, si no existe o es vacío, lo calculamos
       const currentInstanceName = name || perfil?.instance_name || (session?.user.id ? `bot-${session.user.id.substring(0, 5)}` : null);
 
@@ -237,8 +246,26 @@ const Dashboard = () => {
         };
         setMensajes(prev => [...prev, msgPropio]);
         scrollToBottom();
-        // Forzar actualización inmediata de la lista de chats para ver el previo actualizado
-        void cargarChats();
+        
+        // Actualizar manualmente la lista de chats para mover este chat al principio
+        setChats(prev => {
+          const chatIndex = prev.findIndex(c => c.id === chatSeleccionado.id);
+          if (chatIndex === -1) return prev;
+          
+          const updatedChat = {
+            ...prev[chatIndex],
+            lastMessage: {
+              ...prev[chatIndex].lastMessage,
+              message: { conversation: inputMensaje.trim() }
+            }
+          };
+          
+          const otherChats = prev.filter((_, i) => i !== chatIndex);
+          return [updatedChat, ...otherChats];
+        });
+
+        // Forzar actualización del servidor en segundo plano
+        void cargarChats(undefined, true);
       } else {
         toast.error("Error al enviar mensaje");
       }
@@ -630,11 +657,9 @@ const Dashboard = () => {
     socket.on('new_message', (payload: NewMessagePayload) => {
       console.log('[Socket] Mensaje recibido:', payload);
 
-      // Siempre refrescar la lista de chats para mover al tope y actualizar preview
-      void cargarChats();
-
       const currentChat = chatRef.current;
 
+      // 1. Actualizar los mensajes si el chat está abierto
       if (
         currentChat &&
         payload.message.remoteJid === currentChat.id &&
@@ -647,19 +672,28 @@ const Dashboard = () => {
         scrollToBottom();
       }
 
-      // Actualizamos manualmente el previo del chat en la lista para que sea instantáneo
-      setChats(prev => prev.map(c => {
-        if (c.id === payload.message.remoteJid) {
-          return {
-            ...c,
-            lastMessage: {
-              ...c.lastMessage,
-              message: { conversation: payload.message.text }
-            }
-          };
+      // 2. Actualizar la lista de chats de forma INSTANTÁNEA sin recargar del servidor
+      setChats(prev => {
+        const chatIndex = prev.findIndex(c => c.id === payload.message.remoteJid);
+        
+        if (chatIndex === -1) {
+          // Si el chat no está en la lista (es nuevo), ahí sí forzamos una recarga
+          void cargarChats(undefined, true);
+          return prev;
         }
-        return c;
-      }));
+
+        // Si ya existe, lo actualizamos y lo movemos al principio
+        const updatedChat = {
+          ...prev[chatIndex],
+          lastMessage: {
+            ...prev[chatIndex].lastMessage,
+            message: { conversation: payload.message.text }
+          }
+        };
+
+        const otherChats = prev.filter((_, i) => i !== chatIndex);
+        return [updatedChat, ...otherChats];
+      });
     });
 
     socketRef.current = socket;

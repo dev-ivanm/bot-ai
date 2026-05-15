@@ -200,32 +200,43 @@ router.post('/chat/findChat/:instanceName', async (req, res) => {
                        !jid.endsWith('@g.us');
             });
 
+            // --- OPTIMIZACIÓN: Fetch de nombres en lote ---
+            const allJids = filtered.map(chat => chat.remoteJid || chat.id || '').filter(Boolean);
+            
+            // Consultar nombres conocidos en Supabase de una sola vez
+            let supabaseNames = {};
+            try {
+                const { data: namesData } = await supabase
+                    .from('mensajes_wa')
+                    .select('remote_jid, nombre_contacto')
+                    .in('remote_jid', allJids)
+                    .not('nombre_contacto', 'is', null)
+                    .neq('nombre_contacto', '')
+                    .order('created_at', { ascending: false });
+                
+                if (namesData) {
+                    namesData.forEach(row => {
+                        // Al estar ordenado por created_at desc, la primera vez que vemos un JID es el más reciente
+                        if (!supabaseNames[row.remote_jid]) {
+                            supabaseNames[row.remote_jid] = row.nombre_contacto;
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error(`[findChat] Error batch fetching names:`, err);
+            }
+
             // Map the Evolution API response to what Dashboard.tsx expects
-            const enrichedChats = await Promise.all(filtered.map(async chat => {
+            const enrichedChats = filtered.map(chat => {
                 const jid = chat.remoteJid || chat.id || '';
                 
                 // 1. Prioritize authentic names from Evolution
                 let contactName = chat.pushName || chat.push_name || chat.name || chat.lastMessage?.pushName || '';
                 
-                // 2. Fallback: Search in Supabase messages_wa for this JID
+                // 2. Fallback: Use the pre-fetched name from Supabase
                 if (!contactName || contactName.toLowerCase() === 'você' || contactName.toLowerCase() === 'voce' || contactName === extractName(jid)) {
-                    try {
-                        const { data: latestMsg } = await supabase
-                            .from('mensajes_wa')
-                            .select('nombre_contacto')
-                            .eq('remote_jid', jid)
-                            .not('nombre_contacto', 'is', null)
-                            .neq('nombre_contacto', '')
-                            .order('created_at', { ascending: false })
-                            .limit(1)
-                            .maybeSingle();
-
-                        if (latestMsg?.nombre_contacto) {
-                            contactName = latestMsg.nombre_contacto;
-                            console.log(`[findChat] Name enriched from Supabase for ${jid}: ${contactName}`);
-                        }
-                    } catch (err) {
-                        console.error(`[findChat] Error fetching name from Supabase for ${jid}:`, err);
+                    if (supabaseNames[jid]) {
+                        contactName = supabaseNames[jid];
                     }
                 }
 
@@ -272,7 +283,7 @@ router.post('/chat/findChat/:instanceName', async (req, res) => {
                         timestamp: lastMsg.messageTimestamp
                     }
                 };
-            }));
+            });
             formattedChats = enrichedChats;
         } 
         
