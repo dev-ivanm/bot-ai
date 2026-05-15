@@ -1663,10 +1663,22 @@ router.post('/auth/forgot-password', async (req, res) => {
 });
 
 
+// Control de spam para OTP (en memoria)
+const otpThrottle = new Map();
+
 // POST /api/whatsapp/otp/send
 router.post('/otp/send', async (req, res) => {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: 'userId es requerido' });
+
+    // Blindaje: Evitar doble envío en menos de 10 segundos
+    const now = Date.now();
+    const lastSend = otpThrottle.get(userId) || 0;
+    if (now - lastSend < 10000) {
+        console.log(`[OTP] Petición duplicada ignorada para el usuario ${userId}`);
+        return res.json({ success: true, message: 'OTP ya enviado recientemente' });
+    }
+    otpThrottle.set(userId, now);
 
     try {
         const { data: user, error: uError } = await supabase

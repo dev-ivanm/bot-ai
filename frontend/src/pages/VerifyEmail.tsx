@@ -8,7 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 const VerifyEmail = () => {
   const { session, signOut, isVerified, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,6 @@ const VerifyEmail = () => {
   const [info, setInfo] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const sentRef = useRef(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const sendOTP = useCallback(async () => {
     if (!session?.user.id || cooldown > 0) return;
@@ -61,34 +60,23 @@ const VerifyEmail = () => {
     }
 
     // Enviar OTP inicial solo una vez por montado de componente
-    if (!sentRef.current) {
+    if (!sentRef.current && session.user.id) {
         sentRef.current = true;
         sendOTP();
     }
-  }, [session, navigate, sendOTP]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user.id, isVerified, navigate]);
 
-  const handleChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
-
-    // Auto focus next
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Solo números
+    if (value.length <= 6) {
+        setOtp(value);
     }
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    const code = otp.join("");
-    if (code.length < 6) return;
+    if (otp.length < 6) return;
 
     setLoading(true);
     setError(null);
@@ -96,7 +84,7 @@ const VerifyEmail = () => {
       const res = await fetch(`${BACKEND_URL}/api/whatsapp/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session?.user.id, code }),
+        body: JSON.stringify({ userId: session?.user.id, code: otp }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -113,8 +101,7 @@ const VerifyEmail = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error desconocido";
       setError(message);
-      setOtp(["", "", "", "", "", ""]);
-      inputRefs.current[0]?.focus();
+      setOtp("");
     } finally {
       setLoading(false);
     }
@@ -138,20 +125,19 @@ const VerifyEmail = () => {
 
         {/* Form */}
         <form onSubmit={handleVerify} className="space-y-6">
-          <div className="flex justify-between gap-2">
-            {otp.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={(el) => { inputRefs.current[idx] = el; }}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(idx, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(idx, e)}
-                disabled={loading || success}
-                className="w-12 h-14 bg-[#202c33] border-2 border-transparent rounded-xl text-center text-xl font-bold text-[#e9edef] focus:border-[#00a884] focus:outline-none transition-all disabled:opacity-50"
-              />
-            ))}
+          <div className="relative group">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="\d{6}"
+              maxLength={6}
+              value={otp}
+              onChange={handleChange}
+              disabled={loading || success}
+              placeholder="000000"
+              autoFocus
+              className="w-full bg-[#202c33] border-2 border-transparent rounded-xl text-center text-4xl font-black text-[#e9edef] py-4 tracking-[0.5em] focus:border-[#00a884] focus:outline-none transition-all disabled:opacity-50 placeholder:opacity-20 placeholder:tracking-[0.5em]"
+            />
           </div>
 
           {error && (
@@ -177,7 +163,7 @@ const VerifyEmail = () => {
 
           <button
             type="submit"
-            disabled={loading || success || otp.join("").length < 6}
+            disabled={loading || success || otp.length < 6}
             className="w-full bg-[#00a884] text-[#111b21] py-4 rounded-xl font-black text-sm hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider shadow-lg shadow-[#00a884]/20"
           >
             {loading ? "Verificando..." : "Confirmar Código"} <ArrowRight size={18} />
