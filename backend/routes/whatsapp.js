@@ -1471,10 +1471,15 @@ router.get('/upgrade/my-request', async (req, res) => {
 // Gmail API v1 (HTTPS puerto 443 - sin bloqueos de Railway)
 const { google } = require('googleapis');
 
+console.log('[Gmail API] Inicializando con:', {
+    clientId: process.env.GMAIL_CLIENT_ID ? 'Configurado ✅' : 'FALTA ❌',
+    clientSecret: process.env.GMAIL_CLIENT_SECRET ? 'Configurado ✅' : 'FALTA ❌',
+    refreshToken: process.env.GMAIL_REFRESH_TOKEN ? 'Configurado ✅' : 'FALTA ❌'
+});
+
 const oauth2Client = new google.auth.OAuth2(
     process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
+    process.env.GMAIL_CLIENT_SECRET
 );
 
 oauth2Client.setCredentials({
