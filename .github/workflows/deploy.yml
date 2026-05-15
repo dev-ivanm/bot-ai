@@ -20,7 +20,14 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            cd /opt/bot-ai
-            git pull origin main
+            cd /opt/bot-ai || { echo "Error: Directorio /opt/bot-ai no encontrado"; exit 1; }
+            
+            # Forzar actualización al último estado de GitHub
+            git fetch origin
+            git reset --hard origin/main
+            
+            # Levantar contenedores (reconstruyendo solo lo necesario)
             docker compose up -d --build
+            
+            # Limpieza de imágenes antiguas para no llenar el disco del VPS
             docker image prune -f
